@@ -44,6 +44,7 @@
 	},
 	"dependencies": {
 		"@fontsource-variable/noto-sans": "^5.2.10",
+		"@fontsource/fira-code": "^5.2.7",
 		"@fontsource/lato": "^5.2.7",
 		"@fortawesome/fontawesome-svg-core": "^7.1.0",
 		"@fortawesome/free-brands-svg-icons": "^7.1.0",

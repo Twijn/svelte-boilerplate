@@ -172,7 +172,7 @@
 		transform: translate(-50%, -50%);
 		z-index: -1;
 		user-select: none;
-		font-family: 'Courier New', monospace;
+		font-family: var(--font-family-mono), monospace;
 	}
 
 	.error-text h1 {
@@ -219,7 +219,7 @@
 	.error-details pre {
 		padding: 1rem;
 		margin: 0;
-		font-family: 'Courier New', monospace;
+		font-family: var(--font-family-mono), monospace;
 		font-size: 0.9rem;
 		color: var(--text-color-3);
 		overflow-x: auto;

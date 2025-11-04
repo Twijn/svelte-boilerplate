@@ -5,11 +5,12 @@
 	import '@fontsource-variable/noto-sans';
 	import '@fontsource/lato/400.css';
 	import '@fontsource/lato/700.css';
-    import '$lib/app.css';
+	import '@fontsource/fira-code';
+	import '$lib/app.css';
 
 	config.autoAddCss = false;
 
-    const { children } = $props();
+	const { children } = $props();
 </script>
 
 {@render children?.()}

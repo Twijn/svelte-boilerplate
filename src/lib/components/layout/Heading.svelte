@@ -59,4 +59,26 @@
 		margin: 0 0 1.5rem 0;
 		font-size: 1rem;
 	}
+
+	.buttons {
+		display: flex;
+		gap: 0.75rem;
+		flex-wrap: wrap;
+	}
+
+	@media (max-width: 768px) {
+		.header {
+			flex-direction: column;
+			align-items: flex-start;
+		}
+
+		.buttons {
+			width: 100%;
+		}
+
+		.buttons :global(button) {
+			flex: 1;
+			min-width: 120px;
+		}
+	}
 </style>

@@ -1,6 +1,7 @@
 :root {
 	--font-family: 'Lato', sans-serif;
 	--font-family-heading: 'Noto Sans Variable', sans-serif;
+	--font-family-mono: 'Fira Code', monospace;
 
 	--theme-color-rgb: 25, 69, 157;
 	--theme-color-1: #19459d;
@@ -15,6 +16,8 @@
 	--blue: 134, 206, 235;
 	--red: 255, 99, 99;
 	--green: 76, 217, 135;
+	--orange: 255, 159, 10;
+	--purple: 191, 90, 242;
 }
 
 body {
