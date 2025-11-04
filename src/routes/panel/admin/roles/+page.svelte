@@ -270,7 +270,6 @@
 		bind:isOpen={showDeleteModal}
 		onClose={closeModals}
 		title="Delete Role"
-		message={`Are you sure you want to delete the <strong>${selectedRole.name}</strong> role?`}
 		warning="This action cannot be undone."
 		confirmText="Delete Role"
 		confirmVariant="error"
@@ -278,7 +277,10 @@
 			const form = document.querySelector('form[action="?/deleteRole"]') as HTMLFormElement;
 			if (form) form.requestSubmit();
 		}}
-	/>
+		>{#snippet messageSnippet()}<p>
+				Are you sure you want to delete the <strong>{selectedRole?.name ?? 'Unknown'}</strong> role?
+			</p>{/snippet}</ConfirmModal
+	>
 
 	<form method="POST" action="?/deleteRole" use:enhance style="display: none;">
 		<input type="hidden" name="roleId" value={selectedRole.id} />

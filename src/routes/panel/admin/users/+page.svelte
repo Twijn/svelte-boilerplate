@@ -445,7 +445,7 @@
 	{#snippet messageSnippet()}
 		{#if selectedUser}
 			Are you sure you want to delete <strong
-				>${selectedUser.firstName} ${selectedUser.lastName}</strong
+				>{selectedUser.firstName} {selectedUser.lastName}</strong
 			>?
 		{:else}
 			No selected user.
