@@ -6,7 +6,7 @@
 		error?: boolean;
 	}
 
-	let { value = '', onComplete, disabled = false, error = false }: Props = $props();
+	let { value = $bindable(''), onComplete, disabled = false, error = false }: Props = $props();
 
 	let inputs: HTMLInputElement[] = [];
 	let code = $state(value.split('').slice(0, 6));

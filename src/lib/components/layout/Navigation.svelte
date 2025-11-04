@@ -43,7 +43,8 @@
 				{
 					icon: faUser,
 					name: 'Profile Settings',
-					href: '/panel/profile'
+					href: '/panel/profile',
+					startsWith: true
 				}
 			]
 		},

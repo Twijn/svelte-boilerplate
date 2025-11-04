@@ -78,9 +78,9 @@ export function generateBackupCodes(count: number = 10): string[] {
 	const codes: string[] = [];
 
 	for (let i = 0; i < count; i++) {
-		// Generate 8 random bytes and convert to base32-like format (easier to read)
+		// Generate 6 random bytes (12 hex chars) to get XXXX-XXXX-XXXX format
 		const code =
-			randomBytes(5)
+			randomBytes(6)
 				.toString('hex')
 				.toUpperCase()
 				.match(/.{1,4}/g)
