@@ -1,5 +1,8 @@
 import type { Handle } from '@sveltejs/kit';
+import { sequence } from '@sveltejs/kit/hooks';
 import * as auth from '$lib/server/auth';
+import { PermissionService } from '$lib/server/permissions';
+import { permissionHandle } from '$lib/server/permission-middleware';
 
 const handleAuth: Handle = async ({ event, resolve }) => {
 	const sessionToken = event.cookies.get(auth.sessionCookieName);
@@ -23,4 +26,7 @@ const handleAuth: Handle = async ({ event, resolve }) => {
 	return resolve(event);
 };
 
-export const handle: Handle = handleAuth;
+// Initialize system roles on startup
+PermissionService.initializeSystemRoles().catch(console.error);
+
+export const handle: Handle = sequence(handleAuth, permissionHandle);

@@ -1,11 +1,15 @@
 <script lang="ts">
-	import favicon from '$lib/assets/favicon.svg';
+	import { config } from '@fortawesome/fontawesome-svg-core';
+	import '@fortawesome/fontawesome-svg-core/styles.css';
 
-	let { children } = $props();
+	import '@fontsource-variable/noto-sans';
+	import '@fontsource/lato/400.css';
+	import '@fontsource/lato/700.css';
+    import '$lib/app.css';
+
+	config.autoAddCss = false;
+
+    const { children } = $props();
 </script>
 
-<svelte:head>
-	<link rel="icon" href={favicon} />
-</svelte:head>
-
-{@render children()}
+{@render children?.()}

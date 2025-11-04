@@ -1,0 +1,462 @@
+<script lang="ts">
+	import Button from '$lib/components/ui/Button.svelte';
+	import Modal from '$lib/components/ui/Modal.svelte';
+	import ConfirmModal from '$lib/components/ui/ConfirmModal.svelte';
+	import UserCard from '$lib/components/admin/UserCard.svelte';
+	import { enhance } from '$app/forms';
+	import { notifications } from '$lib/stores/notifications';
+	import Heading from '$lib/components/layout/Heading.svelte';
+
+	type User = {
+		id: string;
+		firstName: string;
+		lastName: string;
+		username: string;
+		email: string;
+		roles: Array<{ id: string; name: string; isSystemRole: boolean }>;
+	};
+
+	type Role = {
+		id: string;
+		name: string;
+		isSystemRole: boolean;
+	};
+
+	const { data, form } = $props();
+
+	// Modal state
+	let showAssignModal = $state(false);
+	let showRemoveModal = $state(false);
+	let showCreateModal = $state(false);
+	let showEditModal = $state(false);
+	let showDeleteModal = $state(false);
+	let selectedUser = $state<User | null>(null);
+	let selectedRole = $state('');
+	let roleToRemove = $state<Role | null>(null);
+
+	// Form state
+	let createForm = $state({
+		username: '',
+		email: '',
+		firstName: '',
+		lastName: '',
+		password: ''
+	});
+
+	let editForm = $state({
+		username: '',
+		email: '',
+		firstName: '',
+		lastName: ''
+	});
+
+	// Modal handlers
+	function openCreateModal() {
+		createForm = {
+			username: '',
+			email: '',
+			firstName: '',
+			lastName: '',
+			password: ''
+		};
+		showCreateModal = true;
+	}
+
+	function openEditModal(user: User) {
+		selectedUser = user;
+		editForm = {
+			username: user.username,
+			email: user.email,
+			firstName: user.firstName,
+			lastName: user.lastName
+		};
+		showEditModal = true;
+	}
+
+	function openDeleteModal(user: User) {
+		selectedUser = user;
+		showDeleteModal = true;
+	}
+
+	function openAssignModal(user: User) {
+		selectedUser = user;
+		selectedRole = '';
+		showAssignModal = true;
+	}
+
+	function openRemoveModal(user: User, role: Role) {
+		selectedUser = user;
+		roleToRemove = role;
+		showRemoveModal = true;
+	}
+
+	function closeModals() {
+		showAssignModal = false;
+		showRemoveModal = false;
+		showCreateModal = false;
+		showEditModal = false;
+		showDeleteModal = false;
+		selectedUser = null;
+		roleToRemove = null;
+		selectedRole = '';
+	}
+
+	// Utility functions
+	function getAvailableRoles(user: User) {
+		const userRoleIds = user.roles.map((r) => r.id);
+		return data.roles.filter((role: Role) => !userRoleIds.includes(role.id));
+	}
+
+	function canRemoveRole(role: Role, userRoles: Role[]) {
+		return !role.isSystemRole || userRoles.length > 1;
+	}
+
+	// Show notifications from form actions
+	$effect(() => {
+		if (form?.message) {
+			if (form.success) {
+				notifications.success(form.message);
+			} else {
+				notifications.error(form.message);
+			}
+		}
+	});
+</script>
+
+<svelte:head>
+	<title>User Management - Admin</title>
+</svelte:head>
+
+<Heading
+	text="User Management"
+	description="Manage user roles and permissions"
+	buttons={[{ text: 'Create User', variant: 'primary', onClick: openCreateModal }]}
+/>
+
+{#each data.users as user (user.id)}
+	<UserCard
+		{user}
+		availableRolesCount={getAvailableRoles(user).length}
+		onAssignRole={() => openAssignModal(user)}
+		onRemoveRole={(role) => openRemoveModal(user, role)}
+		onEdit={() => openEditModal(user)}
+		onDelete={() => openDeleteModal(user)}
+		{canRemoveRole}
+	/>
+{/each}
+
+<!-- Modals -->
+<Modal
+	isOpen={showAssignModal}
+	onClose={closeModals}
+	title={selectedUser
+		? `Assign Role to ${selectedUser.firstName} ${selectedUser.lastName}`
+		: 'Assign Role'}
+	size="medium"
+>
+	{#snippet children()}
+		{#if selectedUser}
+			<form
+				method="POST"
+				action="?/assignRole"
+				use:enhance={() => {
+					return async ({ result, update }) => {
+						await update();
+						if (result.type === 'success') {
+							closeModals();
+						}
+					};
+				}}
+			>
+				<input type="hidden" name="userId" value={selectedUser.id} />
+
+				<div class="form-group">
+					<label for="role-select">Select Role:</label>
+					<select id="role-select" name="roleId" bind:value={selectedRole} required>
+						<option value="">Choose a role...</option>
+						{#each getAvailableRoles(selectedUser) as role}
+							<option value={role.id}>{role.name}</option>
+						{/each}
+					</select>
+				</div>
+
+				<div class="modal-actions">
+					<Button type="button" variant="secondary" onClick={closeModals}>Cancel</Button>
+					<Button type="submit" variant="primary" disabled={!selectedRole}>Assign Role</Button>
+				</div>
+			</form>
+		{/if}
+	{/snippet}
+</Modal>
+
+<ConfirmModal
+	bind:isOpen={showRemoveModal}
+	onClose={closeModals}
+	onConfirm={() => {
+		if (selectedUser && roleToRemove) {
+			// Submit the form programmatically
+			const form = document.getElementById('remove-role-form') as HTMLFormElement;
+			form?.requestSubmit();
+		}
+	}}
+	title="Remove Role"
+	message={selectedUser && roleToRemove
+		? `Are you sure you want to remove the <strong>${roleToRemove.name}</strong> role from <strong>${selectedUser.firstName} ${selectedUser.lastName}</strong>?`
+		: ''}
+	warning="This action cannot be undone."
+	confirmText="Remove Role"
+	confirmVariant="error"
+/>
+
+{#if selectedUser && roleToRemove}
+	<form
+		id="remove-role-form"
+		method="POST"
+		action="?/removeRole"
+		use:enhance
+		style="display: none;"
+	>
+		<input type="hidden" name="userId" value={selectedUser.id} />
+		<input type="hidden" name="roleId" value={roleToRemove.id} />
+	</form>
+{/if}
+
+<!-- Create User Modal -->
+<Modal isOpen={showCreateModal} onClose={closeModals} title="Create New User" size="medium">
+	{#snippet children()}
+		<form
+			method="POST"
+			action="?/createUser"
+			use:enhance={() => {
+				return async ({ result, update }) => {
+					await update();
+					if (result.type === 'success') {
+						closeModals();
+					}
+				};
+			}}
+		>
+			<div class="form-group">
+				<label for="create-username">Username:</label>
+				<input
+					id="create-username"
+					type="text"
+					name="username"
+					bind:value={createForm.username}
+					required
+					placeholder="e.g., john_doe"
+				/>
+				<small>3-31 characters, lowercase letters, numbers, hyphens, or underscores</small>
+			</div>
+
+			<div class="form-group">
+				<label for="create-email">Email Address:</label>
+				<input
+					id="create-email"
+					type="email"
+					name="email"
+					bind:value={createForm.email}
+					required
+					placeholder="e.g., john@example.com"
+				/>
+			</div>
+
+			<div class="form-group">
+				<label for="create-firstName">First Name:</label>
+				<input
+					id="create-firstName"
+					type="text"
+					name="firstName"
+					bind:value={createForm.firstName}
+					required
+					placeholder="e.g., John"
+				/>
+			</div>
+
+			<div class="form-group">
+				<label for="create-lastName">Last Name:</label>
+				<input
+					id="create-lastName"
+					type="text"
+					name="lastName"
+					bind:value={createForm.lastName}
+					required
+					placeholder="e.g., Doe"
+				/>
+			</div>
+
+			<div class="form-group">
+				<label for="create-password">Password:</label>
+				<input
+					id="create-password"
+					type="password"
+					name="password"
+					bind:value={createForm.password}
+					required
+					placeholder="Minimum 6 characters"
+				/>
+			</div>
+
+			<div class="modal-actions">
+				<Button type="button" variant="secondary" onClick={closeModals}>Cancel</Button>
+				<Button type="submit" variant="primary">Create User</Button>
+			</div>
+		</form>
+	{/snippet}
+</Modal>
+
+<!-- Edit User Modal -->
+<Modal
+	bind:isOpen={showEditModal}
+	onClose={closeModals}
+	title={selectedUser ? `Edit ${selectedUser.firstName} ${selectedUser.lastName}` : 'Edit User'}
+	size="medium"
+>
+	{#snippet children()}
+		{#if selectedUser}
+			<form
+				method="POST"
+				action="?/updateUser"
+				use:enhance={() => {
+					return async ({ result, update }) => {
+						await update();
+						if (result.type === 'success') {
+							closeModals();
+						}
+					};
+				}}
+			>
+				<input type="hidden" name="userId" value={selectedUser.id} />
+
+				<div class="form-group">
+					<label for="edit-username">Username:</label>
+					<input
+						id="edit-username"
+						type="text"
+						name="username"
+						bind:value={editForm.username}
+						required
+						placeholder="e.g., john_doe"
+					/>
+					<small>3-31 characters, lowercase letters, numbers, hyphens, or underscores</small>
+				</div>
+
+				<div class="form-group">
+					<label for="edit-email">Email Address:</label>
+					<input
+						id="edit-email"
+						type="email"
+						name="email"
+						bind:value={editForm.email}
+						required
+						placeholder="e.g., john@example.com"
+					/>
+				</div>
+
+				<div class="form-group">
+					<label for="edit-firstName">First Name:</label>
+					<input
+						id="edit-firstName"
+						type="text"
+						name="firstName"
+						bind:value={editForm.firstName}
+						required
+						placeholder="e.g., John"
+					/>
+				</div>
+
+				<div class="form-group">
+					<label for="edit-lastName">Last Name:</label>
+					<input
+						id="edit-lastName"
+						type="text"
+						name="lastName"
+						bind:value={editForm.lastName}
+						required
+						placeholder="e.g., Doe"
+					/>
+				</div>
+
+				<div class="modal-actions">
+					<Button type="button" variant="secondary" onClick={closeModals}>Cancel</Button>
+					<Button type="submit" variant="primary">Save Changes</Button>
+				</div>
+			</form>
+		{/if}
+	{/snippet}
+</Modal>
+
+<!-- Delete User Confirmation -->
+<ConfirmModal
+	bind:isOpen={showDeleteModal}
+	onClose={closeModals}
+	onConfirm={() => {
+		if (selectedUser) {
+			const form = document.getElementById('delete-user-form') as HTMLFormElement;
+			form?.requestSubmit();
+		}
+	}}
+	title="Delete User"
+	message={selectedUser
+		? `Are you sure you want to delete <strong>${selectedUser.firstName} ${selectedUser.lastName}</strong>?`
+		: ''}
+	warning="This action cannot be undone. All user data, roles, and sessions will be permanently deleted."
+	confirmText="Delete User"
+	confirmVariant="error"
+/>
+
+{#if selectedUser}
+	<form
+		id="delete-user-form"
+		method="POST"
+		action="?/deleteUser"
+		use:enhance
+		style="display: none;"
+	>
+		<input type="hidden" name="userId" value={selectedUser.id} />
+	</form>
+{/if}
+
+<style>
+	/* Form Styles */
+	.form-group {
+		margin-bottom: 1.5rem;
+	}
+
+	.form-group label {
+		display: block;
+		color: var(--text-color-1);
+		font-weight: 500;
+		margin-bottom: 0.5rem;
+	}
+
+	.form-group select {
+		width: 100%;
+		background: var(--background-color-1);
+		border: 1px solid rgba(255, 255, 255, 0.2);
+		border-radius: 0.5rem;
+		padding: 0.75rem;
+		color: var(--text-color-1);
+		font-size: 1rem;
+		font-family: inherit;
+	}
+
+	.form-group select:focus {
+		outline: none;
+		border-color: var(--theme-color-2);
+		box-shadow: 0 0 0 2px rgba(var(--theme-color-rgb), 0.2);
+	}
+
+	.modal-actions {
+		display: flex;
+		gap: 1rem;
+		justify-content: flex-end;
+		margin-top: 1.5rem;
+	}
+
+	@media (max-width: 768px) {
+		.modal-actions {
+			flex-direction: column-reverse;
+		}
+	}
+</style>
