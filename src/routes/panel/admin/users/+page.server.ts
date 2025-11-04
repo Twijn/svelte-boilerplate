@@ -24,7 +24,12 @@ export const load = async ({ locals }) => {
 			username: table.user.username,
 			email: table.user.email,
 			firstName: table.user.firstName,
-			lastName: table.user.lastName
+			lastName: table.user.lastName,
+			isLocked: table.user.isLocked,
+			lockedAt: table.user.lockedAt,
+			lockedUntil: table.user.lockedUntil,
+			failedLoginAttempts: table.user.failedLoginAttempts,
+			lastFailedLogin: table.user.lastFailedLogin
 		})
 		.from(table.user);
 
@@ -322,6 +327,47 @@ export const actions = {
 		} catch (error) {
 			console.error('Error deleting user:', error);
 			return fail(500, { message: 'Failed to delete user' });
+		}
+	},
+
+	unlockUser: async ({ request, locals }) => {
+		await requireAdmin(locals.user?.id || null);
+
+		const formData = await request.formData();
+		const userId = formData.get('userId') as string;
+
+		if (!userId) {
+			return fail(400, { message: 'User ID is required' });
+		}
+
+		try {
+			// Check if user exists
+			const existingUser = await db
+				.select()
+				.from(table.user)
+				.where(eq(table.user.id, userId))
+				.limit(1);
+
+			if (existingUser.length === 0) {
+				return fail(404, { message: 'User not found' });
+			}
+
+			// Unlock the user account
+			await db
+				.update(table.user)
+				.set({
+					isLocked: false,
+					lockedAt: null,
+					lockedUntil: null,
+					failedLoginAttempts: '0',
+					lastFailedLogin: null
+				})
+				.where(eq(table.user.id, userId));
+
+			return { success: true, message: 'Account unlocked successfully' };
+		} catch (error) {
+			console.error('Error unlocking user:', error);
+			return fail(500, { message: 'Failed to unlock account' });
 		}
 	}
 };

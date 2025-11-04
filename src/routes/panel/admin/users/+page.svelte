@@ -30,6 +30,7 @@
 	let showCreateModal = $state(false);
 	let showEditModal = $state(false);
 	let showDeleteModal = $state(false);
+	let showUnlockModal = $state(false);
 	let selectedUser = $state<User | null>(null);
 	let selectedRole = $state('');
 	let roleToRemove = $state<Role | null>(null);
@@ -90,12 +91,18 @@
 		showRemoveModal = true;
 	}
 
+	function openUnlockModal(user: User) {
+		selectedUser = user;
+		showUnlockModal = true;
+	}
+
 	function closeModals() {
 		showAssignModal = false;
 		showRemoveModal = false;
 		showCreateModal = false;
 		showEditModal = false;
 		showDeleteModal = false;
+		showUnlockModal = false;
 		selectedUser = null;
 		roleToRemove = null;
 		selectedRole = '';
@@ -141,6 +148,7 @@
 		onRemoveRole={(role) => openRemoveModal(user, role)}
 		onEdit={() => openEditModal(user)}
 		onDelete={() => openDeleteModal(user)}
+		onUnlock={user.isLocked ? () => openUnlockModal(user) : undefined}
 		{canRemoveRole}
 	/>
 {/each}
@@ -411,6 +419,48 @@
 		method="POST"
 		action="?/deleteUser"
 		use:enhance
+		style="display: none;"
+	>
+		<input type="hidden" name="userId" value={selectedUser.id} />
+	</form>
+{/if}
+
+<!-- Unlock User Confirmation -->
+<ConfirmModal
+	bind:isOpen={showUnlockModal}
+	onClose={closeModals}
+	onConfirm={() => {
+		if (selectedUser) {
+			const form = document.getElementById('unlock-user-form') as HTMLFormElement;
+			form?.requestSubmit();
+		}
+	}}
+	title="Unlock Account"
+	message={selectedUser
+		? `Are you sure you want to unlock <strong>${selectedUser.firstName} ${selectedUser.lastName}</strong>'s account?`
+		: ''}
+	confirmText="Unlock Account"
+	confirmVariant="primary"
+/>
+
+{#if selectedUser}
+	<form
+		id="unlock-user-form"
+		method="POST"
+		action="?/unlockUser"
+		use:enhance={() => {
+			return async ({ result, update }) => {
+				if (result.type === 'success') {
+					notifications.success('Account unlocked successfully');
+					closeModals();
+				} else if (result.type === 'failure') {
+					const message =
+						(result.data as { message?: string })?.message || 'Failed to unlock account';
+					notifications.error(message);
+				}
+				await update();
+			};
+		}}
 		style="display: none;"
 	>
 		<input type="hidden" name="userId" value={selectedUser.id} />

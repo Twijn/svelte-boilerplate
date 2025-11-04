@@ -6,7 +6,10 @@
 		faShieldAlt,
 		faCrown,
 		faUserTie,
-		faXmarkCircle
+		faXmarkCircle,
+		faLock,
+		faUnlock,
+		faEnvelope
 	} from '@fortawesome/free-solid-svg-icons';
 	import Card from '../ui/Card.svelte';
 
@@ -17,6 +20,9 @@
 		firstName: string;
 		lastName: string;
 		roles: Role[];
+		isLocked?: boolean;
+		lockedUntil?: Date | null;
+		failedLoginAttempts?: string;
 	}
 
 	interface Role {
@@ -32,6 +38,7 @@
 		onRemoveRole: (role: Role) => void;
 		onEdit: () => void;
 		onDelete: () => void;
+		onUnlock?: () => void;
 		canRemoveRole: (role: Role, allRoles: Role[]) => boolean;
 	}
 
@@ -42,6 +49,7 @@
 		onRemoveRole,
 		onEdit,
 		onDelete,
+		onUnlock,
 		canRemoveRole
 	}: Props = $props();
 
@@ -68,11 +76,47 @@
 	initials={getUserInitials(user)}
 	initialsTitle="{user.firstName} {user.lastName}"
 >
-	{#snippet header()}{/snippet}
 	{#snippet children()}
+		{#if user.isLocked}
+			{@const isTemporary = user.lockedUntil && new Date(user.lockedUntil) > new Date()}
+			{@const isPermanent = user.isLocked && !user.lockedUntil}
+			<button
+				class="lock-status locked clickable"
+				onclick={onUnlock}
+				disabled={!onUnlock}
+				title={onUnlock ? 'Click to unlock account' : 'Cannot unlock'}
+			>
+				<FontAwesomeIcon icon={faLock} />
+				<span>
+					{#if isPermanent}
+						<strong>Permanently Locked</strong>
+					{:else if isTemporary && user.lockedUntil}
+						{@const minutesRemaining = Math.ceil(
+							(new Date(user.lockedUntil).getTime() - Date.now()) / 60000
+						)}
+						<strong>Temporarily Locked</strong>
+						<br />
+						({minutesRemaining} min remaining)
+					{:else}
+						<strong>Locked</strong> (expired, auto-unlocking)
+					{/if}
+				</span>
+				{#if user.failedLoginAttempts && parseInt(user.failedLoginAttempts) > 0}
+					<span class="failed-attempts">
+						{user.failedLoginAttempts} failed attempts
+					</span>
+				{/if}
+			</button>
+		{:else}
+			<div class="lock-status unlocked">
+				<FontAwesomeIcon icon={faUnlock} />
+				<span>Account Active</span>
+			</div>
+		{/if}
+
 		<div class="user-info">
 			<p class="user-email">
-				<i class="fa-solid fa-envelope"></i>
+				<FontAwesomeIcon icon={faEnvelope} />
 				{user.email}
 			</p>
 		</div>
@@ -134,12 +178,63 @@
 		color: var(--text-color-2);
 		display: flex;
 		align-items: center;
-		gap: 0.5rem;
+		gap: 0.25rem;
 	}
 
-	.user-email i {
-		color: var(--theme-color-2);
-		font-size: 0.9rem;
+	.lock-status {
+		font-family: var(--font-family-heading), sans-serif;
+		padding: 0.2rem 0.4rem;
+		border-radius: 0.25rem;
+		font-size: 0.8rem;
+		display: flex;
+		align-items: center;
+		gap: 0.25rem;
+		font-weight: 500;
+		width: 100%;
+		text-align: left;
+		margin-bottom: 0.75rem;
+	}
+
+	.lock-status.clickable {
+		cursor: pointer;
+		transition: all 0.2s ease;
+	}
+
+	.lock-status.clickable:hover:not(:disabled) {
+		transform: translateY(-1px);
+		box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+	}
+
+	.lock-status.clickable:active:not(:disabled) {
+		transform: translateY(0);
+	}
+
+	.lock-status.clickable:disabled {
+		cursor: not-allowed;
+		opacity: 0.7;
+	}
+
+	.lock-status.locked {
+		background: rgba(255, 59, 48, 0.15);
+		border: 1px solid rgba(255, 59, 48, 0.3);
+		color: rgb(255, 100, 90);
+	}
+
+	.lock-status.locked strong {
+		color: rgb(255, 80, 70);
+	}
+
+	.lock-status.unlocked {
+		background: rgba(52, 199, 89, 0.15);
+		border: 1px solid rgba(52, 199, 89, 0.3);
+		color: rgb(80, 210, 110);
+		font-weight: 500;
+	}
+
+	.failed-attempts {
+		margin-left: auto;
+		font-size: 0.75rem;
+		opacity: 0.8;
 	}
 
 	.user-roles h4 {
