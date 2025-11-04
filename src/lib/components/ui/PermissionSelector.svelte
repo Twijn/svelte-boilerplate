@@ -1,9 +1,5 @@
 <script lang="ts">
-	import {
-		getAllPermissions,
-		getPermissionCategories,
-		getPermissionsByCategory
-	} from '$lib/constants/permissions';
+	import { getPermissionCategories, getPermissionsByCategory } from '$lib/constants/permissions';
 
 	interface Props {
 		selected?: string[];
@@ -57,7 +53,7 @@
 </script>
 
 <div class="permission-selector">
-	{#each categories as category}
+	{#each categories as category (category.key)}
 		{@const categoryPermissions = getPermissionsByCategory(category.key)}
 		{#if categoryPermissions.length > 0}
 			<div class="category-section">
@@ -76,7 +72,7 @@
 				</div>
 
 				<div class="permissions-grid">
-					{#each categoryPermissions as permission}
+					{#each categoryPermissions as permission (permission.key)}
 						<label class="permission-item">
 							<input
 								type="checkbox"

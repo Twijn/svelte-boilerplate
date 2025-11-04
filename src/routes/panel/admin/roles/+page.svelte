@@ -170,7 +170,7 @@
 			<div class="form-label">Permissions:</div>
 			<PermissionSelector bind:selected={selectedPermissions} />
 			<!-- Hidden inputs for form submission -->
-			{#each selectedPermissions as permission}
+			{#each selectedPermissions as permission (permission)}
 				<input type="hidden" name="permissions" value={permission} />
 			{/each}
 		</div>
@@ -245,7 +245,7 @@
 				<div class="form-label">Permissions:</div>
 				<PermissionSelector bind:selected={selectedPermissions} disabled={isLocked} />
 				<!-- Hidden inputs for form submission -->
-				{#each selectedPermissions as permission}
+				{#each selectedPermissions as permission (permission)}
 					<input type="hidden" name="permissions" value={permission} />
 				{/each}
 			</div>

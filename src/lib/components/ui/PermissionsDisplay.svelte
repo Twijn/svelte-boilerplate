@@ -31,7 +31,7 @@
 
 <div class="permissions-display" class:grouped={groupByCategory}>
 	{#if groupByCategory}
-		{#each permissionsByCategory as category}
+		{#each permissionsByCategory as category (category.key)}
 			<div class="permission-category">
 				<h5 class="category-label">
 					{category.label}

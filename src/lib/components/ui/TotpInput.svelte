@@ -88,7 +88,7 @@
 </script>
 
 <div class="totp-input-container">
-	{#each Array(6) as _, index}
+	{#each Array(6) as _, index (String(index))}
 		<input
 			bind:this={inputs[index]}
 			type="text"
