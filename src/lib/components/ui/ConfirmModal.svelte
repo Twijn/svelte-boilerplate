@@ -37,35 +37,33 @@
 </script>
 
 <Modal isOpen={open} {onClose} {title} size="small">
-	{#snippet children()}
-		<div class="confirm-content">
-			<div class="message">
-				{#if messageSnippet}
-					{@render messageSnippet()}
-				{:else if message}
-					<p>{message}</p>
-				{/if}
-			</div>
-			{#if warningSnippet || warning}
-				<div class="warning">
-					{#if warningSnippet}
-						{@render warningSnippet()}
-					{:else if warning}
-						<p>{warning}</p>
-					{/if}
-				</div>
+	<div class="confirm-content">
+		<div class="message">
+			{#if messageSnippet}
+				{@render messageSnippet()}
+			{:else if message}
+				<p>{message}</p>
 			{/if}
 		</div>
+		{#if warningSnippet || warning}
+			<div class="warning">
+				{#if warningSnippet}
+					{@render warningSnippet()}
+				{:else if warning}
+					<p>{warning}</p>
+				{/if}
+			</div>
+		{/if}
+	</div>
 
-		<div class="confirm-actions">
-			<Button type="button" variant="secondary" onClick={onClose}>
-				{cancelText}
-			</Button>
-			<Button type="button" variant={confirmVariant} onClick={handleConfirm}>
-				{confirmText}
-			</Button>
-		</div>
-	{/snippet}
+	<div class="confirm-actions">
+		<Button type="button" variant="secondary" onClick={onClose}>
+			{cancelText}
+		</Button>
+		<Button type="button" variant={confirmVariant} onClick={handleConfirm}>
+			{confirmText}
+		</Button>
+	</div>
 </Modal>
 
 <style>

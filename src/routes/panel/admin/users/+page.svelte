@@ -163,39 +163,37 @@
 		: 'Assign Role'}
 	size="medium"
 >
-	{#snippet children()}
-		{#if selectedUser}
-			<form
-				method="POST"
-				action="?/assignRole"
-				use:enhance={() => {
-					return async ({ result, update }) => {
-						await update();
-						if (result.type === 'success') {
-							closeModals();
-						}
-					};
-				}}
-			>
-				<input type="hidden" name="userId" value={selectedUser.id} />
+	{#if selectedUser}
+		<form
+			method="POST"
+			action="?/assignRole"
+			use:enhance={() => {
+				return async ({ result, update }) => {
+					await update();
+					if (result.type === 'success') {
+						closeModals();
+					}
+				};
+			}}
+		>
+			<input type="hidden" name="userId" value={selectedUser.id} />
 
-				<div class="form-group">
-					<label for="role-select">Select Role:</label>
-					<select id="role-select" name="roleId" bind:value={selectedRole} required>
-						<option value="">Choose a role...</option>
-						{#each getAvailableRoles(selectedUser) as role}
-							<option value={role.id}>{role.name}</option>
-						{/each}
-					</select>
-				</div>
+			<div class="form-group">
+				<label for="role-select">Select Role:</label>
+				<select id="role-select" name="roleId" bind:value={selectedRole} required>
+					<option value="">Choose a role...</option>
+					{#each getAvailableRoles(selectedUser) as role (role.id)}
+						<option value={role.id}>{role.name}</option>
+					{/each}
+				</select>
+			</div>
 
-				<div class="modal-actions">
-					<Button type="button" variant="secondary" onClick={closeModals}>Cancel</Button>
-					<Button type="submit" variant="primary" disabled={!selectedRole}>Assign Role</Button>
-				</div>
-			</form>
-		{/if}
-	{/snippet}
+			<div class="modal-actions">
+				<Button type="button" variant="secondary" onClick={closeModals}>Cancel</Button>
+				<Button type="submit" variant="primary" disabled={!selectedRole}>Assign Role</Button>
+			</div>
+		</form>
+	{/if}
 </Modal>
 
 <ConfirmModal
@@ -236,86 +234,84 @@
 
 <!-- Create User Modal -->
 <Modal isOpen={showCreateModal} onClose={closeModals} title="Create New User" size="medium">
-	{#snippet children()}
-		<form
-			method="POST"
-			action="?/createUser"
-			use:enhance={() => {
-				return async ({ result, update }) => {
-					await update();
-					if (result.type === 'success') {
-						closeModals();
-					}
-				};
-			}}
-		>
-			<div class="form-group">
-				<label for="create-username">Username:</label>
-				<input
-					id="create-username"
-					type="text"
-					name="username"
-					bind:value={createForm.username}
-					required
-					placeholder="e.g., john_doe"
-				/>
-				<small>3-31 characters, lowercase letters, numbers, hyphens, or underscores</small>
-			</div>
+	<form
+		method="POST"
+		action="?/createUser"
+		use:enhance={() => {
+			return async ({ result, update }) => {
+				await update();
+				if (result.type === 'success') {
+					closeModals();
+				}
+			};
+		}}
+	>
+		<div class="form-group">
+			<label for="create-username">Username:</label>
+			<input
+				id="create-username"
+				type="text"
+				name="username"
+				bind:value={createForm.username}
+				required
+				placeholder="e.g., john_doe"
+			/>
+			<small>3-31 characters, lowercase letters, numbers, hyphens, or underscores</small>
+		</div>
 
-			<div class="form-group">
-				<label for="create-email">Email Address:</label>
-				<input
-					id="create-email"
-					type="email"
-					name="email"
-					bind:value={createForm.email}
-					required
-					placeholder="e.g., john@example.com"
-				/>
-			</div>
+		<div class="form-group">
+			<label for="create-email">Email Address:</label>
+			<input
+				id="create-email"
+				type="email"
+				name="email"
+				bind:value={createForm.email}
+				required
+				placeholder="e.g., john@example.com"
+			/>
+		</div>
 
-			<div class="form-group">
-				<label for="create-firstName">First Name:</label>
-				<input
-					id="create-firstName"
-					type="text"
-					name="firstName"
-					bind:value={createForm.firstName}
-					required
-					placeholder="e.g., John"
-				/>
-			</div>
+		<div class="form-group">
+			<label for="create-firstName">First Name:</label>
+			<input
+				id="create-firstName"
+				type="text"
+				name="firstName"
+				bind:value={createForm.firstName}
+				required
+				placeholder="e.g., John"
+			/>
+		</div>
 
-			<div class="form-group">
-				<label for="create-lastName">Last Name:</label>
-				<input
-					id="create-lastName"
-					type="text"
-					name="lastName"
-					bind:value={createForm.lastName}
-					required
-					placeholder="e.g., Doe"
-				/>
-			</div>
+		<div class="form-group">
+			<label for="create-lastName">Last Name:</label>
+			<input
+				id="create-lastName"
+				type="text"
+				name="lastName"
+				bind:value={createForm.lastName}
+				required
+				placeholder="e.g., Doe"
+			/>
+		</div>
 
-			<div class="form-group">
-				<label for="create-password">Password:</label>
-				<input
-					id="create-password"
-					type="password"
-					name="password"
-					bind:value={createForm.password}
-					required
-					placeholder="Minimum 6 characters"
-				/>
-			</div>
+		<div class="form-group">
+			<label for="create-password">Password:</label>
+			<input
+				id="create-password"
+				type="password"
+				name="password"
+				bind:value={createForm.password}
+				required
+				placeholder="Minimum 6 characters"
+			/>
+		</div>
 
-			<div class="modal-actions">
-				<Button type="button" variant="secondary" onClick={closeModals}>Cancel</Button>
-				<Button type="submit" variant="primary">Create User</Button>
-			</div>
-		</form>
-	{/snippet}
+		<div class="modal-actions">
+			<Button type="button" variant="secondary" onClick={closeModals}>Cancel</Button>
+			<Button type="submit" variant="primary">Create User</Button>
+		</div>
+	</form>
 </Modal>
 
 <!-- Edit User Modal -->
@@ -325,78 +321,76 @@
 	title={selectedUser ? `Edit ${selectedUser.firstName} ${selectedUser.lastName}` : 'Edit User'}
 	size="medium"
 >
-	{#snippet children()}
-		{#if selectedUser}
-			<form
-				method="POST"
-				action="?/updateUser"
-				use:enhance={() => {
-					return async ({ result, update }) => {
-						await update();
-						if (result.type === 'success') {
-							closeModals();
-						}
-					};
-				}}
-			>
-				<input type="hidden" name="userId" value={selectedUser.id} />
+	{#if selectedUser}
+		<form
+			method="POST"
+			action="?/updateUser"
+			use:enhance={() => {
+				return async ({ result, update }) => {
+					await update();
+					if (result.type === 'success') {
+						closeModals();
+					}
+				};
+			}}
+		>
+			<input type="hidden" name="userId" value={selectedUser.id} />
 
-				<div class="form-group">
-					<label for="edit-username">Username:</label>
-					<input
-						id="edit-username"
-						type="text"
-						name="username"
-						bind:value={editForm.username}
-						required
-						placeholder="e.g., john_doe"
-					/>
-					<small>3-31 characters, lowercase letters, numbers, hyphens, or underscores</small>
-				</div>
+			<div class="form-group">
+				<label for="edit-username">Username:</label>
+				<input
+					id="edit-username"
+					type="text"
+					name="username"
+					bind:value={editForm.username}
+					required
+					placeholder="e.g., john_doe"
+				/>
+				<small>3-31 characters, lowercase letters, numbers, hyphens, or underscores</small>
+			</div>
 
-				<div class="form-group">
-					<label for="edit-email">Email Address:</label>
-					<input
-						id="edit-email"
-						type="email"
-						name="email"
-						bind:value={editForm.email}
-						required
-						placeholder="e.g., john@example.com"
-					/>
-				</div>
+			<div class="form-group">
+				<label for="edit-email">Email Address:</label>
+				<input
+					id="edit-email"
+					type="email"
+					name="email"
+					bind:value={editForm.email}
+					required
+					placeholder="e.g., john@example.com"
+				/>
+			</div>
 
-				<div class="form-group">
-					<label for="edit-firstName">First Name:</label>
-					<input
-						id="edit-firstName"
-						type="text"
-						name="firstName"
-						bind:value={editForm.firstName}
-						required
-						placeholder="e.g., John"
-					/>
-				</div>
+			<div class="form-group">
+				<label for="edit-firstName">First Name:</label>
+				<input
+					id="edit-firstName"
+					type="text"
+					name="firstName"
+					bind:value={editForm.firstName}
+					required
+					placeholder="e.g., John"
+				/>
+			</div>
 
-				<div class="form-group">
-					<label for="edit-lastName">Last Name:</label>
-					<input
-						id="edit-lastName"
-						type="text"
-						name="lastName"
-						bind:value={editForm.lastName}
-						required
-						placeholder="e.g., Doe"
-					/>
-				</div>
+			<div class="form-group">
+				<label for="edit-lastName">Last Name:</label>
+				<input
+					id="edit-lastName"
+					type="text"
+					name="lastName"
+					bind:value={editForm.lastName}
+					required
+					placeholder="e.g., Doe"
+				/>
+			</div>
 
-				<div class="modal-actions">
-					<Button type="button" variant="secondary" onClick={closeModals}>Cancel</Button>
-					<Button type="submit" variant="primary">Save Changes</Button>
-				</div>
-			</form>
-		{/if}
-	{/snippet}
+			<div class="modal-actions">
+				<Button type="button" variant="secondary" onClick={closeModals}>Cancel</Button>
+				<Button type="submit" variant="primary">Save Changes</Button>
+			</div>
+		</form>
+	{/if}
 </Modal>
 
 <!-- Delete User Confirmation -->

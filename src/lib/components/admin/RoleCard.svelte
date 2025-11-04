@@ -13,7 +13,7 @@
 	import Card from '../ui/Card.svelte';
 
 	interface Role {
-		id: string;
+		// id: string;
 		name: string;
 		description?: string | null;
 		permissions: string[];
@@ -70,7 +70,7 @@
 			Permissions <div class="badge badge-primary">{role.permissions.length}</div>
 		</h4>
 		<div class="permissions-list">
-			{#each role.permissions as permission}
+			{#each role.permissions as permission (permission)}
 				<span class="permission-badge">
 					{formatPermissionLabel(permission)}
 				</span>
@@ -84,7 +84,7 @@
 				Assigned Users <div class="badge badge-primary">{role.users.length}</div>
 			</h4>
 			<div class="users-list">
-				{#each role.users.slice(0, 3) as user}
+				{#each role.users.slice(0, 3) as user (user.id)}
 					<div class="user-avatar" title="{user.firstName} {user.lastName}">
 						{user.firstName.charAt(0)}{user.lastName.charAt(0)}
 					</div>

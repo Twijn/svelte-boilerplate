@@ -134,7 +134,7 @@
 		<div class="form-group">
 			<div class="form-label">Permissions:</div>
 			<div class="permissions-grid">
-				{#each data.availablePermissions as permission}
+				{#each data.availablePermissions as permission (permission.key)}
 					<label class="permission-checkbox">
 						<input
 							type="checkbox"
@@ -209,7 +209,7 @@
 			<div class="form-group">
 				<div class="form-label">Permissions:</div>
 				<div class="permissions-grid">
-					{#each data.availablePermissions as permission}
+					{#each data.availablePermissions as permission (permission.key)}
 						<label class="permission-checkbox">
 							<input
 								type="checkbox"

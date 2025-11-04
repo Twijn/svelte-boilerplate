@@ -6,8 +6,6 @@
 	import {
 		faHistory,
 		faFilter,
-		faDownload,
-		faRefresh,
 		faChevronLeft,
 		faChevronRight,
 		faSearch,
@@ -18,6 +16,7 @@
 	} from '@fortawesome/free-solid-svg-icons';
 	import Button from '$lib/components/ui/Button.svelte';
 	import { APP_NAME } from '$lib/consts';
+	import { SvelteURLSearchParams } from 'svelte/reactivity';
 
 	const { data } = $props();
 
@@ -70,7 +69,7 @@
 	];
 
 	function applyFilters() {
-		const params = new URLSearchParams();
+		const params = new SvelteURLSearchParams();
 
 		if (filterForm.userId) params.set('userId', filterForm.userId);
 		if (filterForm.action) params.set('action', filterForm.action);
@@ -99,7 +98,7 @@
 	}
 
 	function changePage(newPage: number) {
-		const params = new URLSearchParams($page.url.searchParams);
+		const params = new SvelteURLSearchParams($page.url.searchParams);
 		params.set('page', String(newPage));
 		goto(`?${params.toString()}`);
 	}
@@ -290,7 +289,7 @@
 				<label for="action">Action</label>
 				<select id="action" bind:value={filterForm.action}>
 					<option value="">All Actions</option>
-					{#each actions as action}
+					{#each actions as action (action)}
 						<option value={action}>{action}</option>
 					{/each}
 				</select>
@@ -300,7 +299,7 @@
 				<label for="category">Category</label>
 				<select id="category" bind:value={filterForm.category}>
 					<option value="">All Categories</option>
-					{#each categories as category}
+					{#each categories as category (category)}
 						<option value={category}>{category}</option>
 					{/each}
 				</select>
@@ -310,7 +309,7 @@
 				<label for="severity">Severity</label>
 				<select id="severity" bind:value={filterForm.severity}>
 					<option value="">All Severities</option>
-					{#each severities as severity}
+					{#each severities as severity (severity)}
 						<option value={severity}>{severity}</option>
 					{/each}
 				</select>
@@ -361,7 +360,7 @@
 			</tr>
 		</thead>
 		<tbody>
-			{#each data.activities as log}
+			{#each data.activities as log (log.id)}
 				<tr class="log-row">
 					<td class="timestamp-cell">
 						<FontAwesomeIcon icon={faClock} />
@@ -431,7 +430,7 @@
 			{#each Array.from({ length: Math.min(5, data.pagination.totalPages) }, (_, i) => {
 				const startPage = Math.max(1, Math.min(data.pagination.page - 2, data.pagination.totalPages - 4));
 				return startPage + i;
-			}) as pageNum}
+			}) as pageNum (pageNum)}
 				<button
 					class="page-number {pageNum === data.pagination.page ? 'active' : ''}"
 					onclick={() => changePage(pageNum)}
