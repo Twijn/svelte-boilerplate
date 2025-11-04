@@ -9,7 +9,7 @@
 	<title>Panel | {APP_NAME}</title>
 </svelte:head>
 
-<Heading text="Welcome to Svelte Boilerplate!" />
+<Heading text="Welcome to {APP_NAME}!" />
 
 <Section icon={faRocket} heading="Getting Started" lgCols={12}>
 	<p>This is a boilerplate Svelte project to make it easy to get started with Svelte + Logins</p>

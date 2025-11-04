@@ -223,6 +223,7 @@
 	buttons={[
 		{
 			text: 'Export CSV',
+			variant: 'link',
 			onClick: exportLogs
 		},
 		{
