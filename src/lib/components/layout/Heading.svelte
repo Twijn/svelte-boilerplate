@@ -62,6 +62,7 @@
 
 	.buttons {
 		display: flex;
+		flex-direction: row;
 		gap: 0.75rem;
 		flex-wrap: wrap;
 	}
