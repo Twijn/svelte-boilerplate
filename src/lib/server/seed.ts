@@ -6,7 +6,6 @@ import 'dotenv/config';
 import { generateId } from './utils';
 import { hash } from '@node-rs/argon2';
 
-// System roles definition (copied from permissions.ts to avoid SvelteKit dependencies)
 const SYSTEM_ROLES = {
 	SUPER_ADMIN: {
 		id: 'super-admin',
@@ -105,7 +104,7 @@ async function seed() {
 		if (users.length === 0) {
 			// Create Admin User
 			const adminUserId = generateId();
-			const passwordHash = await hash('admin'); // Default password
+			const passwordHash = await hash('admin123'); // Default password
 
 			await db.insert(table.user).values({
 				id: adminUserId,
@@ -117,7 +116,7 @@ async function seed() {
 				isLocked: false,
 				failedLoginAttempts: '0'
 			});
-			console.log('✅ Created admin user (username: admin, password: admin)');
+			console.log('✅ Created admin user (username: admin, password: admin123)');
 
 			// Assign Admin Role to Admin User
 			await db.insert(table.userRole).values({
