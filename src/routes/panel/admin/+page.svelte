@@ -124,33 +124,6 @@
 	</div>
 </div>
 
-<div class="col-6 col-md-12">
-	<div class="management-card">
-		<div class="card-header">
-			<div class="card-icon locked">
-				<FontAwesomeIcon icon={faUserTie} size="2x" />
-			</div>
-			<div class="card-title">
-				<h3>Account Security</h3>
-				<p>View and manage locked user accounts</p>
-			</div>
-		</div>
-
-		<div class="card-content">
-			<ul class="feature-list">
-				<li>View locked accounts</li>
-				<li>Unlock user accounts</li>
-				<li>Monitor failed login attempts</li>
-				<li>Manage account lockouts</li>
-			</ul>
-		</div>
-
-		<div class="card-actions">
-			<Button href="/panel/admin/locked-accounts" variant="primary" arrow>Locked Accounts</Button>
-		</div>
-	</div>
-</div>
-
 <style>
 	.stat-card {
 		background: var(--background-color-2);
