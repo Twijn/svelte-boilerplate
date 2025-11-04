@@ -1,5 +1,6 @@
 <script lang="ts">
 	import Button from '$lib/components/ui/Button.svelte';
+	import StatCard from '$lib/components/ui/StatCard.svelte';
 	import { FontAwesomeIcon } from '@fortawesome/svelte-fontawesome';
 	import {
 		faUsers,
@@ -83,51 +84,42 @@
 
 <!-- Stats Cards -->
 <div class="col-3 col-md-6 col-sm-12">
-	<div class="stat-card">
-		<div class="stat-icon users">
-			<FontAwesomeIcon icon={faUsers} size="2x" />
-		</div>
-		<div class="stat-content">
-			<h3>{data.stats.totalUsers}</h3>
-			<p>Total Users</p>
-		</div>
-	</div>
+	<StatCard
+		icon={faUsers}
+		value={data.stats.totalUsers}
+		label="Total Users"
+		color="blue"
+		href="/panel/admin/users"
+	/>
 </div>
 
 <div class="col-3 col-md-6 col-sm-12">
-	<div class="stat-card">
-		<div class="stat-icon roles">
-			<FontAwesomeIcon icon={faShield} size="2x" />
-		</div>
-		<div class="stat-content">
-			<h3>{data.stats.totalRoles}</h3>
-			<p>System Roles</p>
-		</div>
-	</div>
+	<StatCard
+		icon={faShield}
+		value={data.stats.totalRoles}
+		label="System Roles"
+		color="red"
+		href="/panel/admin/roles"
+	/>
 </div>
 
 <div class="col-3 col-md-6 col-sm-12">
-	<div class="stat-card">
-		<div class="stat-icon activity">
-			<FontAwesomeIcon icon={faChartLine} size="2x" />
-		</div>
-		<div class="stat-content">
-			<h3>{data.stats.totalActivityToday}</h3>
-			<p>Activity (24h)</p>
-		</div>
-	</div>
+	<StatCard
+		icon={faChartLine}
+		value={data.stats.totalActivityToday}
+		label="Activity (24h)"
+		color="orange"
+		href="/panel/admin/activity"
+	/>
 </div>
 
 <div class="col-3 col-md-6 col-sm-12">
-	<div class="stat-card">
-		<div class="stat-icon security">
-			<FontAwesomeIcon icon={faExclamationTriangle} size="2x" />
-		</div>
-		<div class="stat-content">
-			<h3>{data.stats.failedLoginsToday}</h3>
-			<p>Failed Logins (24h)</p>
-		</div>
-	</div>
+	<StatCard
+		icon={faExclamationTriangle}
+		value={data.stats.failedLoginsToday}
+		label="Failed Logins (24h)"
+		color="red"
+	/>
 </div>
 
 <!-- Management Cards -->
@@ -287,73 +279,6 @@
 </div>
 
 <style>
-	.stat-card {
-		background: var(--background-color-2);
-		border: 1px solid rgba(255, 255, 255, 0.1);
-		border-radius: 1rem;
-		padding: 2rem;
-		display: flex;
-		align-items: center;
-		gap: 1.5rem;
-		box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-		transition: all 0.3s ease;
-	}
-
-	.stat-card:hover {
-		border-color: rgba(255, 255, 255, 0.2);
-		box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15);
-		transform: translateY(-2px);
-	}
-
-	.stat-icon {
-		flex-shrink: 0;
-		width: 60px;
-		height: 60px;
-		border-radius: 1rem;
-		display: flex;
-		align-items: center;
-		justify-content: center;
-	}
-
-	.stat-icon.users {
-		background: rgba(var(--blue), 0.2);
-		color: rgb(var(--blue));
-	}
-
-	.stat-icon.roles {
-		background: rgba(var(--red), 0.2);
-		color: rgb(var(--red));
-	}
-
-	.stat-icon.permissions {
-		background: rgba(var(--green), 0.2);
-		color: rgb(var(--green));
-	}
-
-	.stat-icon.activity {
-		background: rgba(var(--orange), 0.2);
-		color: rgb(var(--orange));
-	}
-
-	.stat-icon.security {
-		background: rgba(255, 59, 48, 0.2);
-		color: rgb(255, 100, 90);
-	}
-
-	.stat-content h3 {
-		color: var(--text-color-1);
-		font-size: 2rem;
-		font-weight: 700;
-		margin: 0 0 0.25rem 0;
-	}
-
-	.stat-content p {
-		color: var(--text-color-2);
-		font-size: 0.9rem;
-		margin: 0;
-		font-weight: 500;
-	}
-
 	/* Management Cards */
 	.management-card {
 		background: var(--background-color-2);
@@ -685,7 +610,6 @@
 	}
 
 	@media (max-width: 768px) {
-		.stat-card,
 		.management-card {
 			padding: 1.5rem;
 		}

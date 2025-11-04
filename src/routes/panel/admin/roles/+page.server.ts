@@ -54,9 +54,21 @@ export const load = async ({ locals }) => {
 	// Get all available permissions from the new permission system
 	const availablePermissions = getAllPermissions();
 
+	// Calculate stats
+	const totalRoles = roles.length;
+	const systemRoles = roles.filter((r) => r.isSystemRole).length;
+	const customRoles = totalRoles - systemRoles;
+	const totalAssignments = rolesWithUsers.reduce((sum, role) => sum + role.userCount, 0);
+
 	return {
 		roles: rolesWithUsers,
-		availablePermissions
+		availablePermissions,
+		stats: {
+			totalRoles,
+			systemRoles,
+			customRoles,
+			totalAssignments
+		}
 	};
 };
 

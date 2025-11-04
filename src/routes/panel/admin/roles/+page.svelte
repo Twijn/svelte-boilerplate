@@ -4,11 +4,18 @@
 	import ConfirmModal from '$lib/components/ui/ConfirmModal.svelte';
 	import RoleCard from '$lib/components/admin/RoleCard.svelte';
 	import PermissionSelector from '$lib/components/ui/PermissionSelector.svelte';
+	import StatCard from '$lib/components/ui/StatCard.svelte';
 	import { enhance } from '$app/forms';
 	import { notifications } from '$lib/stores/notifications';
 	import Heading from '$lib/components/layout/Heading.svelte';
 	import { APP_NAME } from '$lib/consts.js';
-	import { faWarning } from '@fortawesome/free-solid-svg-icons';
+	import {
+		faWarning,
+		faShield,
+		faCog,
+		faLayerGroup,
+		faUserTag
+	} from '@fortawesome/free-solid-svg-icons';
 	import { FontAwesomeIcon } from '@fortawesome/svelte-fontawesome';
 
 	interface Role {
@@ -71,14 +78,6 @@
 		selectedPermissions = [];
 	}
 
-	function togglePermission(permission: string) {
-		if (selectedPermissions.includes(permission)) {
-			selectedPermissions = selectedPermissions.filter((p) => p !== permission);
-		} else {
-			selectedPermissions = [...selectedPermissions, permission];
-		}
-	}
-
 	// Show notifications from form actions and close modals on success
 	$effect(() => {
 		if (form?.message) {
@@ -107,6 +106,33 @@
 		}
 	]}
 />
+
+<!-- Stats Cards -->
+<div class="col-3 col-md-6 col-sm-12">
+	<StatCard icon={faShield} value={data.stats.totalRoles} label="Total Roles" color="blue" />
+</div>
+
+<div class="col-3 col-md-6 col-sm-12">
+	<StatCard icon={faCog} value={data.stats.systemRoles} label="System Roles" color="orange" />
+</div>
+
+<div class="col-3 col-md-6 col-sm-12">
+	<StatCard
+		icon={faLayerGroup}
+		value={data.stats.customRoles}
+		label="Custom Roles"
+		color="purple"
+	/>
+</div>
+
+<div class="col-3 col-md-6 col-sm-12">
+	<StatCard
+		icon={faUserTag}
+		value={data.stats.totalAssignments}
+		label="Total Assignments"
+		color="green"
+	/>
+</div>
 
 {#each data.roles as role (role.id)}
 	<div class="col-4 col-md-6 col-sm-12">

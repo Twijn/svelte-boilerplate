@@ -3,9 +3,16 @@
 	import Modal from '$lib/components/ui/Modal.svelte';
 	import ConfirmModal from '$lib/components/ui/ConfirmModal.svelte';
 	import UserCard from '$lib/components/admin/UserCard.svelte';
+	import StatCard from '$lib/components/ui/StatCard.svelte';
 	import { enhance } from '$app/forms';
 	import { notifications } from '$lib/stores/notifications';
 	import Heading from '$lib/components/layout/Heading.svelte';
+	import {
+		faUsers,
+		faCheckCircle,
+		faLock,
+		faExclamationTriangle
+	} from '@fortawesome/free-solid-svg-icons';
 	import { APP_NAME } from '$lib/consts.js';
 
 	type User = {
@@ -140,6 +147,33 @@
 	description="Manage user roles and permissions"
 	buttons={[{ text: 'Create User', variant: 'primary', onClick: openCreateModal }]}
 />
+
+<!-- Stats Cards -->
+<div class="col-3 col-md-6 col-sm-12">
+	<StatCard icon={faUsers} value={data.stats.totalUsers} label="Total Users" color="blue" />
+</div>
+
+<div class="col-3 col-md-6 col-sm-12">
+	<StatCard
+		icon={faCheckCircle}
+		value={data.stats.activeUsers}
+		label="Active Users"
+		color="green"
+	/>
+</div>
+
+<div class="col-3 col-md-6 col-sm-12">
+	<StatCard icon={faLock} value={data.stats.lockedUsers} label="Locked Accounts" color="red" />
+</div>
+
+<div class="col-3 col-md-6 col-sm-12">
+	<StatCard
+		icon={faExclamationTriangle}
+		value={data.stats.usersWithFailedLogins}
+		label="Failed Login Attempts"
+		color="orange"
+	/>
+</div>
 
 {#each data.users as user (user.id)}
 	<UserCard

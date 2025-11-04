@@ -53,9 +53,22 @@ export const load = async ({ locals }) => {
 	// Get all available roles for assignment
 	const allRoles = await db.select().from(table.role);
 
+	// Calculate stats
+	const totalUsers = users.length;
+	const lockedUsers = users.filter((u) => u.isLocked).length;
+	const usersWithFailedLogins = users.filter(
+		(u) => u.failedLoginAttempts && Number(u.failedLoginAttempts) > 0
+	).length;
+
 	return {
 		users: usersWithRoles,
-		roles: allRoles
+		roles: allRoles,
+		stats: {
+			totalUsers,
+			lockedUsers,
+			usersWithFailedLogins,
+			activeUsers: totalUsers - lockedUsers
+		}
 	};
 };
 

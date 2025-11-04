@@ -1,7 +1,8 @@
 <script lang="ts">
-	import { page } from '$app/stores';
+	import { page } from '$app/state';
 	import { goto } from '$app/navigation';
 	import Heading from '$lib/components/layout/Heading.svelte';
+	import StatCard from '$lib/components/ui/StatCard.svelte';
 	import { FontAwesomeIcon } from '@fortawesome/svelte-fontawesome';
 	import {
 		faHistory,
@@ -12,7 +13,11 @@
 		faTimes,
 		faCheckCircle,
 		faTimesCircle,
-		faClock
+		faClock,
+		faListOl,
+		faPercent,
+		faExclamationTriangle,
+		faFileAlt
 	} from '@fortawesome/free-solid-svg-icons';
 	import Button from '$lib/components/ui/Button.svelte';
 	import { APP_NAME } from '$lib/consts';
@@ -98,7 +103,7 @@
 	}
 
 	function changePage(newPage: number) {
-		const params = new SvelteURLSearchParams($page.url.searchParams);
+		const params = new SvelteURLSearchParams(page.url.searchParams);
 		params.set('page', String(newPage));
 		goto(`?${params.toString()}`);
 	}
@@ -232,26 +237,43 @@
 	]}
 />
 
-<!-- Stats Bar -->
-<div class="stats-bar col-12">
-	<div class="stat-item">
-		<span class="stat-label">Total Logs</span>
-		<span class="stat-value">{data.pagination.total.toLocaleString()}</span>
-	</div>
-	<div class="stat-item">
-		<span class="stat-label">Success Rate</span>
-		<span class="stat-value">
-			{data.stats.total > 0 ? Math.round((data.stats.successful / data.stats.total) * 100) : 0}%
-		</span>
-	</div>
-	<div class="stat-item">
-		<span class="stat-label">Failed Actions</span>
-		<span class="stat-value">{data.stats.failed.toLocaleString()}</span>
-	</div>
-	<div class="stat-item">
-		<span class="stat-label">Page</span>
-		<span class="stat-value">{data.pagination.page} / {data.pagination.totalPages}</span>
-	</div>
+<!-- Stats Cards -->
+<div class="col-3 col-md-6 col-sm-12">
+	<StatCard
+		icon={faListOl}
+		value={data.pagination.total.toLocaleString()}
+		label="Total Logs"
+		color="blue"
+	/>
+</div>
+
+<div class="col-3 col-md-6 col-sm-12">
+	<StatCard
+		icon={faPercent}
+		value="{data.stats.total > 0
+			? Math.round((data.stats.successful / data.stats.total) * 100)
+			: 0}%"
+		label="Success Rate"
+		color="green"
+	/>
+</div>
+
+<div class="col-3 col-md-6 col-sm-12">
+	<StatCard
+		icon={faExclamationTriangle}
+		value={data.stats.failed.toLocaleString()}
+		label="Failed Actions"
+		color="red"
+	/>
+</div>
+
+<div class="col-3 col-md-6 col-sm-12">
+	<StatCard
+		icon={faFileAlt}
+		value="{data.pagination.page} / {data.pagination.totalPages}"
+		label="Page"
+		color="purple"
+	/>
 </div>
 
 <!-- Filter Toggle -->
@@ -451,37 +473,6 @@
 {/if}
 
 <style>
-	/* Stats Bar */
-	.stats-bar {
-		display: grid;
-		grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
-		gap: 0.5rem;
-		margin-bottom: 1rem;
-	}
-
-	.stat-item {
-		background: var(--background-color-2);
-		border: 1px solid rgba(255, 255, 255, 0.1);
-		border-radius: 0.5rem;
-		padding: 0.75rem;
-		display: flex;
-		flex-direction: column;
-		gap: 0.25rem;
-	}
-
-	.stat-label {
-		color: var(--text-color-2);
-		font-size: 0.7rem;
-		text-transform: uppercase;
-		letter-spacing: 0.5px;
-	}
-
-	.stat-value {
-		color: var(--text-color-1);
-		font-size: 1.35rem;
-		font-weight: 700;
-	}
-
 	/* Filter Toggle */
 	.filter-toggle {
 		display: flex;
@@ -695,10 +686,6 @@
 	@media (max-width: 768px) {
 		.pagination {
 			flex-direction: column;
-		}
-
-		.stats-bar {
-			grid-template-columns: repeat(2, 1fr);
 		}
 	}
 </style>
