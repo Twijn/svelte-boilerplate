@@ -120,7 +120,34 @@ export const actions: Actions = {
 		// Successful login - clear failed attempts
 		await AccountLockoutService.clearFailedAttempts(existingUser.id);
 
-		// Log successful login
+		// Check if 2FA is enabled
+		if (existingUser.twoFactorEnabled) {
+			// Store user ID in a temporary cookie for 2FA verification
+			event.cookies.set('2fa_pending_user_id', existingUser.id, {
+				path: '/',
+				httpOnly: true,
+				secure: process.env.NODE_ENV === 'production',
+				sameSite: 'lax',
+				maxAge: 60 * 5 // 5 minutes
+			});
+
+			// Log 2FA challenge
+			await ActivityLogService.log({
+				userId: existingUser.id,
+				ipAddress: clientIP,
+				userAgent: event.request.headers.get('user-agent'),
+				action: 'user.2fa.challenge',
+				category: ActivityCategory.AUTH,
+				resourceType: 'user',
+				resourceId: existingUser.id,
+				success: true,
+				message: `2FA challenge initiated for user: ${username}`
+			});
+
+			return redirect(302, '/login/verify-2fa');
+		}
+
+		// Log successful login (no 2FA)
 		await ActivityLogService.log({
 			userId: existingUser.id,
 			ipAddress: clientIP,

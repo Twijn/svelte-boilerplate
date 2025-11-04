@@ -767,25 +767,38 @@ section::before {
 	}
 }
 
-/* Premium Divider */
+/* Text Divider - for "or" separators in forms */
 .divider {
-	height: 1px;
-	background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+	text-align: center;
 	margin: 2rem 0;
 	position: relative;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+}
+
+.divider::before,
+.divider::after {
+	content: '';
+	flex: 1;
+	height: 1px;
+	background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
 }
 
 .divider::before {
-	content: '';
-	position: absolute;
-	top: -1px;
-	left: 50%;
-	transform: translateX(-50%);
-	width: 4px;
-	height: 4px;
-	background: var(--theme-color-2);
-	border-radius: 50%;
-	box-shadow: 0 0 8px var(--theme-color-2);
+	margin-right: 1rem;
+}
+
+.divider::after {
+	margin-left: 1rem;
+}
+
+.divider span {
+	color: var(--text-color-2);
+	font-size: 0.9rem;
+	text-transform: uppercase;
+	letter-spacing: 0.1em;
+	font-weight: 500;
 }
 
 /* Layout Utility Classes - No more calc() needed! */
@@ -1221,5 +1234,56 @@ label {
 	.form-intro {
 		font-size: 1rem;
 		margin-bottom: 1.5rem;
+	}
+}
+
+/* Code Input Styles */
+
+/* Backup Code Input - Reusable form input for backup codes */
+.backup-code-input {
+	width: 100%;
+	max-width: 350px;
+	padding: 1rem;
+	text-align: center;
+	font-size: 1.25rem;
+	font-family: var(--font-family-mono), monospace;
+	font-weight: 600;
+	letter-spacing: 0.1em;
+	background: var(--background-color-1);
+	border: 2px solid rgba(255, 255, 255, 0.2);
+	border-radius: 0.5rem;
+	color: var(--text-color-1);
+	transition: all 0.2s ease;
+	text-transform: uppercase;
+	margin: 0 auto;
+	display: block;
+}
+
+.backup-code-input:focus {
+	outline: none;
+	border-color: var(--theme-color-2);
+	box-shadow:
+		0 0 0 3px rgba(var(--theme-color-rgb), 0.1),
+		0 2px 8px rgba(0, 0, 0, 0.15);
+	transform: translateY(-1px);
+}
+
+.backup-code-input:disabled {
+	opacity: 0.5;
+	cursor: not-allowed;
+	background: rgba(0, 0, 0, 0.2);
+}
+
+.backup-code-input::placeholder {
+	color: var(--text-color-3);
+	opacity: 0.5;
+}
+
+/* Responsive adjustments for backup code input */
+@media (max-width: 640px) {
+	.backup-code-input {
+		font-size: 1.1rem;
+		padding: 0.875rem;
+		max-width: 100%;
 	}
 }

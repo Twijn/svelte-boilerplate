@@ -1,5 +1,6 @@
 import nodemailer from 'nodemailer';
 import { env } from '$env/dynamic/private';
+import { APP_NAME } from '$lib/consts';
 
 interface EmailOptions {
 	to: string;
@@ -146,7 +147,7 @@ export function getPasswordResetEmail(resetLink: string, firstName: string): str
 		</div>
 		<div class="footer">
 			<p>This is an automated message, please do not reply to this email.</p>
-			<p>&copy; ${new Date().getFullYear()} ${env.APP_NAME || 'Your App'}. All rights reserved.</p>
+			<p>&copy; ${new Date().getFullYear()} ${APP_NAME}. All rights reserved.</p>
 		</div>
 	</div>
 </body>
@@ -224,7 +225,7 @@ export function getWelcomeEmail(firstName: string, username: string): string {
 			<p>If you have any questions or need assistance, feel free to reach out to our support team.</p>
 		</div>
 		<div class="footer">
-			<p>&copy; ${new Date().getFullYear()} ${env.APP_NAME || 'Your App'}. All rights reserved.</p>
+			<p>&copy; ${new Date().getFullYear()} ${APP_NAME}. All rights reserved.</p>
 		</div>
 	</div>
 </body>
@@ -308,7 +309,7 @@ export function getPasswordChangedEmail(firstName: string): string {
 		</div>
 		<div class="footer">
 			<p>This is an automated message, please do not reply to this email.</p>
-			<p>&copy; ${new Date().getFullYear()} ${env.APP_NAME || 'Your App'}. All rights reserved.</p>
+			<p>&copy; ${new Date().getFullYear()} ${APP_NAME}. All rights reserved.</p>
 		</div>
 	</div>
 </body>

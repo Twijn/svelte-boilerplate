@@ -39,6 +39,7 @@ export const ActivityActions = {
 	REGISTER: 'user.register',
 	PASSWORD_RESET_REQUEST: 'user.password_reset.request',
 	PASSWORD_RESET_COMPLETE: 'user.password_reset.complete',
+	PASSWORD_CHANGE: 'user.password.change',
 
 	// User management
 	USER_CREATE: 'user.create',

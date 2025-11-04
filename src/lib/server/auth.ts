@@ -35,7 +35,9 @@ export async function validateSessionToken(token: string) {
 				id: table.user.id,
 				username: table.user.username,
 				firstName: table.user.firstName,
-				lastName: table.user.lastName
+				lastName: table.user.lastName,
+				email: table.user.email,
+				avatar: table.user.avatar
 			},
 			session: table.session
 		})
@@ -70,6 +72,17 @@ export type SessionValidationResult = Awaited<ReturnType<typeof validateSessionT
 
 export async function invalidateSession(sessionId: string) {
 	await db.delete(table.session).where(eq(table.session.id, sessionId));
+}
+
+export async function invalidateUserSessions(userId: string, exceptSessionId?: string) {
+	const { and, ne } = await import('drizzle-orm');
+	if (exceptSessionId) {
+		await db
+			.delete(table.session)
+			.where(and(eq(table.session.userId, userId), ne(table.session.id, exceptSessionId)));
+	} else {
+		await db.delete(table.session).where(eq(table.session.userId, userId));
+	}
 }
 
 export function setSessionTokenCookie(event: RequestEvent, token: string, expiresAt: Date) {

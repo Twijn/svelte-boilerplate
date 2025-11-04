@@ -7,11 +7,28 @@ export const user = pgTable('user', {
 	username: text('username').notNull().unique(),
 	email: text('email').notNull().unique(),
 	passwordHash: text('password_hash').notNull(),
+
+	// Profile fields
+	avatar: text('avatar'), // URL or path to avatar image
+	bio: text('bio'), // Short biography
+	location: text('location'), // User's location
+	website: text('website'), // Personal website URL
+
+	// Two-Factor Authentication
+	twoFactorSecret: text('two_factor_secret'), // TOTP secret (encrypted)
+	twoFactorEnabled: boolean('two_factor_enabled').notNull().default(false),
+	twoFactorBackupCodes: json('two_factor_backup_codes').$type<string[]>(), // Hashed backup codes
+
+	// Account status
 	isLocked: boolean('is_locked').notNull().default(false),
 	lockedAt: timestamp('locked_at', { withTimezone: true, mode: 'date' }),
 	lockedUntil: timestamp('locked_until', { withTimezone: true, mode: 'date' }),
 	failedLoginAttempts: text('failed_login_attempts').notNull().default('0'),
-	lastFailedLogin: timestamp('last_failed_login', { withTimezone: true, mode: 'date' })
+	lastFailedLogin: timestamp('last_failed_login', { withTimezone: true, mode: 'date' }),
+
+	// Timestamps
+	createdAt: timestamp('created_at', { withTimezone: true, mode: 'date' }).notNull().defaultNow(),
+	updatedAt: timestamp('updated_at', { withTimezone: true, mode: 'date' }).notNull().defaultNow()
 });
 
 export const session = pgTable('session', {
@@ -81,6 +98,18 @@ export const passwordResetToken = pgTable('password_reset_token', {
 	createdAt: timestamp('created_at', { withTimezone: true, mode: 'date' }).notNull().defaultNow()
 });
 
+// Email change verification tokens
+export const emailChangeToken = pgTable('email_change_token', {
+	id: text('id').primaryKey(),
+	userId: text('user_id')
+		.notNull()
+		.references(() => user.id, { onDelete: 'cascade' }),
+	newEmail: text('new_email').notNull(),
+	tokenHash: text('token_hash').notNull(),
+	expiresAt: timestamp('expires_at', { withTimezone: true, mode: 'date' }).notNull(),
+	createdAt: timestamp('created_at', { withTimezone: true, mode: 'date' }).notNull().defaultNow()
+});
+
 // Activity log - tracks all actions and changes in the system
 export const activityLog = pgTable('activity_log', {
 	id: text('id').primaryKey(),
@@ -117,4 +146,5 @@ export type UserRole = typeof userRole.$inferSelect;
 export type PermissionNode = typeof permissionNode.$inferSelect;
 export type UserNodePermission = typeof userNodePermission.$inferSelect;
 export type PasswordResetToken = typeof passwordResetToken.$inferSelect;
+export type EmailChangeToken = typeof emailChangeToken.$inferSelect;
 export type ActivityLog = typeof activityLog.$inferSelect;

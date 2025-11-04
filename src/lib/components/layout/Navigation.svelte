@@ -4,6 +4,7 @@
 	import type { IconDefinition } from '@fortawesome/fontawesome-svg-core';
 	import {
 		faHome,
+		faUser,
 		faUserCog,
 		faShieldAlt,
 		faKey,
@@ -38,6 +39,11 @@
 					icon: faHome,
 					name: 'Dashboard',
 					href: '/panel'
+				},
+				{
+					icon: faUser,
+					name: 'Profile Settings',
+					href: '/panel/profile'
 				}
 			]
 		},

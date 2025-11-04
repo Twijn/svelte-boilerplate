@@ -1,6 +1,5 @@
 import { fail, redirect } from '@sveltejs/kit';
 import * as auth from '$lib/server/auth';
-import { notifications } from '$lib/stores/notifications.js';
 import {
 	ActivityLogService,
 	ActivityCategory,
@@ -18,7 +17,6 @@ export const actions = {
 
 		await auth.invalidateSession(event.locals.session.id);
 		auth.deleteSessionTokenCookie(event);
-		notifications.info('You have been logged out.');
 
 		// Log logout
 		if (userId) {
