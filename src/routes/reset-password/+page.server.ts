@@ -9,6 +9,12 @@ import {
 import { db } from '$lib/server/db';
 import * as table from '$lib/server/db/schema';
 import { eq } from 'drizzle-orm';
+import {
+	ActivityLogService,
+	ActivityCategory,
+	ActivityActions,
+	LogSeverity
+} from '$lib/server/activity-log';
 import type { Actions, PageServerLoad } from './$types';
 
 export const load: PageServerLoad = async ({ url, locals }) => {
@@ -95,11 +101,39 @@ export const actions: Actions = {
 			// Send confirmation email
 			await sendPasswordChangedNotification(userId);
 
+			// Log successful password reset
+			await ActivityLogService.log({
+				userId,
+				ipAddress: request.headers.get('x-forwarded-for')?.split(',')[0].trim() || 'unknown',
+				userAgent: request.headers.get('user-agent'),
+				action: ActivityActions.PASSWORD_RESET_COMPLETE,
+				category: ActivityCategory.AUTH,
+				severity: LogSeverity.INFO,
+				resourceType: 'user',
+				resourceId: userId,
+				message: 'Password reset completed successfully',
+				success: true
+			});
+
 			return {
 				success: true
 			};
 		} catch (error) {
 			console.error('Password reset error:', error);
+
+			// Log failed password reset
+			await ActivityLogService.logFailure(
+				ActivityActions.PASSWORD_RESET_COMPLETE,
+				ActivityCategory.AUTH,
+				error instanceof Error ? error.message : 'Unknown error',
+				{
+					userId,
+					ipAddress: request.headers.get('x-forwarded-for')?.split(',')[0].trim() || 'unknown',
+					userAgent: request.headers.get('user-agent'),
+					severity: LogSeverity.ERROR
+				}
+			);
+
 			return fail(500, {
 				error: 'Failed to reset password. Please try again.'
 			});

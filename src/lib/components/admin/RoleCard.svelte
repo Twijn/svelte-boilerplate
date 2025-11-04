@@ -8,12 +8,14 @@
 		faShieldAlt,
 		faCrown,
 		faUserTie,
-		faUser
+		faUser,
+		faLock
 	} from '@fortawesome/free-solid-svg-icons';
 	import Card from '../ui/Card.svelte';
+	import PermissionsDisplay from '../ui/PermissionsDisplay.svelte';
 
 	interface Role {
-		// id: string;
+		id: string;
 		name: string;
 		description?: string | null;
 		permissions: string[];
@@ -35,19 +37,16 @@
 
 	const { role, onEdit, onDelete }: Props = $props();
 
+	// Check if role can be edited (all except super admin)
+	const canEdit = $derived(role.id !== 'super-admin');
+	const isSuperAdmin = $derived(role.id === 'super-admin');
+
 	function getRoleIcon(roleName: string) {
 		const lowerName = roleName.toLowerCase();
 		if (lowerName.includes('super') || lowerName.includes('root')) return faCrown;
 		if (lowerName.includes('admin')) return faShieldAlt;
 		if (lowerName.includes('manager') || lowerName.includes('moderator')) return faUserTie;
 		return faUser;
-	}
-
-	function formatPermissionLabel(permission: string): string {
-		return permission
-			.split('_')
-			.map((word) => word.charAt(0).toUpperCase() + word.slice(1))
-			.join(' ');
 	}
 </script>
 
@@ -67,15 +66,9 @@
 	{/snippet}
 	<div class="role-permissions">
 		<h4>
-			Permissions <div class="badge badge-primary">{role.permissions.length}</div>
+			Permissions <span class="badge">{role.permissions.length}</span>
 		</h4>
-		<div class="permissions-list">
-			{#each role.permissions as permission (permission)}
-				<span class="permission-badge">
-					{formatPermissionLabel(permission)}
-				</span>
-			{/each}
-		</div>
+		<PermissionsDisplay permissions={role.permissions} variant="compact" groupByCategory={true} />
 	</div>
 
 	{#if role.users.length > 0}
@@ -96,23 +89,25 @@
 		</div>
 	{/if}
 	{#snippet actions()}
-		{#if !role.isSystemRole}
+		{#if canEdit}
 			<Button variant="secondary" onClick={onEdit}>
 				<FontAwesomeIcon icon={faEdit} />
 				Edit
 			</Button>
-			<Button
-				variant="error"
-				onClick={onDelete}
-				disabled={role.userCount > 0}
-				title={role.userCount > 0 ? 'Cannot delete role with assigned users' : 'Delete role'}
-			>
-				<FontAwesomeIcon icon={faTrash} />
-				Delete
-			</Button>
-		{:else}
+			{#if !role.isSystemRole}
+				<Button
+					variant="error"
+					onClick={onDelete}
+					disabled={role.userCount > 0}
+					title={role.userCount > 0 ? 'Cannot delete role with assigned users' : 'Delete role'}
+				>
+					<FontAwesomeIcon icon={faTrash} />
+					Delete
+				</Button>
+			{/if}
+		{:else if isSuperAdmin}
 			<div class="system-role-notice">
-				<small>System roles cannot be modified</small>
+				<small><FontAwesomeIcon icon={faLock} /> Super Admin role is protected</small>
 			</div>
 		{/if}
 	{/snippet}
@@ -138,20 +133,32 @@
 		gap: 0.35rem;
 	}
 
-	.permissions-list {
-		display: flex;
-		flex-wrap: wrap;
-		gap: 0.35rem;
-	}
-
-	.permission-badge {
-		background: rgba(255, 255, 255, 0.05);
-		border: 1px solid rgba(255, 255, 255, 0.2);
-		color: var(--text-color-2);
-		padding: 0.2rem 0.5rem;
+	.badge {
+		display: inline-flex;
+		align-items: center;
+		justify-content: center;
+		min-width: 1.5rem;
+		height: 1.5rem;
+		padding: 0 0.4rem;
+		background: rgba(var(--blue), 0.2);
+		color: rgb(var(--blue));
 		border-radius: 0.75rem;
 		font-size: 0.7rem;
-		font-weight: 500;
+		font-weight: 600;
+		margin-left: 0.5rem;
+	}
+
+	.role-permissions {
+		margin-bottom: 0.75rem;
+	}
+
+	.role-permissions h4 {
+		color: var(--text-color-1);
+		font-size: 0.85rem;
+		font-weight: 600;
+		margin: 0 0 0.75rem 0;
+		display: flex;
+		align-items: center;
 	}
 
 	.role-users {

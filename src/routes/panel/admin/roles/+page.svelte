@@ -3,10 +3,13 @@
 	import Modal from '$lib/components/ui/Modal.svelte';
 	import ConfirmModal from '$lib/components/ui/ConfirmModal.svelte';
 	import RoleCard from '$lib/components/admin/RoleCard.svelte';
+	import PermissionSelector from '$lib/components/ui/PermissionSelector.svelte';
 	import { enhance } from '$app/forms';
 	import { notifications } from '$lib/stores/notifications';
 	import Heading from '$lib/components/layout/Heading.svelte';
 	import { APP_NAME } from '$lib/consts.js';
+	import { faWarning } from '@fortawesome/free-solid-svg-icons';
+	import { FontAwesomeIcon } from '@fortawesome/svelte-fontawesome';
 
 	interface Role {
 		id: string;
@@ -48,6 +51,11 @@
 		showEditModal = true;
 	}
 
+	// Check if role can be edited (not super admin)
+	function canEditRole(role: Role): boolean {
+		return role.id !== 'super-admin';
+	}
+
 	function openDeleteModal(role: Role) {
 		selectedRole = role;
 		showDeleteModal = true;
@@ -71,11 +79,12 @@
 		}
 	}
 
-	// Show notifications from form actions
+	// Show notifications from form actions and close modals on success
 	$effect(() => {
 		if (form?.message) {
 			if (form.success) {
 				notifications.success(form.message);
+				closeModals(); // Close modal after successful action
 			} else {
 				notifications.error(form.message);
 			}
@@ -106,7 +115,7 @@
 {/each}
 
 <!-- Create Role Modal -->
-<Modal bind:isOpen={showCreateModal} onClose={closeModals} title="Create New Role" size="medium">
+<Modal bind:isOpen={showCreateModal} onClose={closeModals} title="Create New Role" size="large">
 	<form method="POST" action="?/createRole" use:enhance>
 		<div class="form-group">
 			<label for="role-name">Role Name:</label>
@@ -133,20 +142,11 @@
 
 		<div class="form-group">
 			<div class="form-label">Permissions:</div>
-			<div class="permissions-grid">
-				{#each data.availablePermissions as permission (permission.key)}
-					<label class="permission-checkbox">
-						<input
-							type="checkbox"
-							name="permissions"
-							value={permission.value}
-							checked={selectedPermissions.includes(permission.value)}
-							onchange={() => togglePermission(permission.value)}
-						/>
-						<span>{permission.label}</span>
-					</label>
-				{/each}
-			</div>
+			<PermissionSelector bind:selected={selectedPermissions} />
+			<!-- Hidden inputs for form submission -->
+			{#each selectedPermissions as permission}
+				<input type="hidden" name="permissions" value={permission} />
+			{/each}
 		</div>
 
 		<div class="modal-actions">
@@ -167,11 +167,19 @@
 	isOpen={showEditModal && !!selectedRole}
 	onClose={closeModals}
 	title={selectedRole ? `Edit Role: ${selectedRole.name}` : ''}
-	size="medium"
+	size="large"
 >
 	{#if selectedRole}
+		{@const isLocked = !canEditRole(selectedRole)}
 		<form method="POST" action="?/updateRole" use:enhance>
 			<input type="hidden" name="roleId" value={selectedRole.id} />
+
+			{#if isLocked}
+				<div class="warning-banner">
+					<strong>Super Admin Role</strong>
+					<p>The Super Admin role cannot be modified to maintain system security.</p>
+				</div>
+			{/if}
 
 			<div class="form-group">
 				<label for="edit-role-name">Role Name:</label>
@@ -182,10 +190,16 @@
 					bind:value={newRoleName}
 					required
 					placeholder="e.g., Editor"
-					disabled={selectedRole.isSystemRole}
+					disabled={isLocked ||
+						(selectedRole.isSystemRole &&
+							selectedRole.id !== 'admin' &&
+							selectedRole.id !== 'user')}
 				/>
-				{#if selectedRole.isSystemRole}
-					<small style="color: rgb(var(--orange));">System role names cannot be changed</small>
+				{#if selectedRole.isSystemRole && !isLocked}
+					<small
+						><FontAwesomeIcon icon={faWarning} /> Changing system role names may affect existing code
+						references</small
+					>
 				{/if}
 			</div>
 
@@ -197,37 +211,17 @@
 					bind:value={newRoleDescription}
 					rows="3"
 					placeholder="e.g., Can edit content but cannot publish"
-					disabled={selectedRole.isSystemRole}
+					disabled={isLocked}
 				></textarea>
-				{#if selectedRole.isSystemRole}
-					<small style="color: rgb(var(--orange));"
-						>System role descriptions cannot be changed</small
-					>
-				{/if}
 			</div>
 
 			<div class="form-group">
 				<div class="form-label">Permissions:</div>
-				<div class="permissions-grid">
-					{#each data.availablePermissions as permission (permission.key)}
-						<label class="permission-checkbox">
-							<input
-								type="checkbox"
-								name="permissions"
-								value={permission.value}
-								checked={selectedPermissions.includes(permission.value)}
-								onchange={() => togglePermission(permission.value)}
-								disabled={selectedRole.isSystemRole}
-							/>
-							<span>{permission.label}</span>
-						</label>
-					{/each}
-				</div>
-				{#if selectedRole.isSystemRole}
-					<small style="color: rgb(var(--orange)); margin-top: 0.5rem; display: block;">
-						System role permissions cannot be modified
-					</small>
-				{/if}
+				<PermissionSelector bind:selected={selectedPermissions} disabled={isLocked} />
+				<!-- Hidden inputs for form submission -->
+				{#each selectedPermissions as permission}
+					<input type="hidden" name="permissions" value={permission} />
+				{/each}
 			</div>
 
 			<div class="modal-actions">
@@ -235,7 +229,7 @@
 				<Button
 					type="submit"
 					variant="primary"
-					disabled={selectedPermissions.length === 0 || selectedRole.isSystemRole}
+					disabled={selectedPermissions.length === 0 || isLocked}
 				>
 					Update Role
 				</Button>
@@ -307,34 +301,23 @@
 		font-size: 0.85rem;
 	}
 
-	.permissions-grid {
-		display: grid;
-		grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-		gap: 0.75rem;
-		margin-top: 0.5rem;
-	}
-
-	.permission-checkbox {
-		display: flex;
-		align-items: center;
-		gap: 0.5rem;
-		padding: 0.5rem;
+	.warning-banner {
+		background: rgba(255, 165, 0, 0.1);
+		border: 1px solid rgba(255, 165, 0, 0.3);
 		border-radius: 0.5rem;
-		cursor: pointer;
-		transition: background-color 0.2s ease;
+		padding: 1rem;
+		margin-bottom: 1.5rem;
 	}
 
-	.permission-checkbox:hover {
-		background: rgba(255, 255, 255, 0.05);
+	.warning-banner strong {
+		color: rgb(var(--orange));
+		display: block;
+		margin-bottom: 0.25rem;
 	}
 
-	.permission-checkbox input[type='checkbox'] {
-		width: auto;
-		margin: 0;
-	}
-
-	.permission-checkbox span {
+	.warning-banner p {
 		color: var(--text-color-2);
+		margin: 0;
 		font-size: 0.9rem;
 	}
 
@@ -343,11 +326,5 @@
 		gap: 1rem;
 		justify-content: flex-end;
 		margin-top: 1.5rem;
-	}
-
-	@media (max-width: 768px) {
-		.permissions-grid {
-			grid-template-columns: 1fr;
-		}
 	}
 </style>

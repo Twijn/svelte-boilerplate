@@ -12,6 +12,12 @@ import {
 	validateEmail
 } from '$lib/server/auth';
 import { hash } from '@node-rs/argon2';
+import {
+	ActivityLogService,
+	ActivityCategory,
+	ActivityActions,
+	LogSeverity
+} from '$lib/server/activity-log';
 
 export const load = async ({ locals }) => {
 	// Check if user has admin permission
@@ -78,9 +84,42 @@ export const actions = {
 			}
 
 			await PermissionService.assignRole(userId, roleId, locals.user?.id);
+
+			// Log role assignment
+			await ActivityLogService.log({
+				userId: locals.user?.id,
+				ipAddress: request.headers.get('x-forwarded-for')?.split(',')[0].trim() || 'unknown',
+				userAgent: request.headers.get('user-agent'),
+				action: ActivityActions.ROLE_ASSIGN,
+				category: ActivityCategory.ROLE,
+				severity: LogSeverity.INFO,
+				resourceType: 'user',
+				resourceId: userId,
+				metadata: { roleId, assignedBy: locals.user?.id },
+				message: `Role ${roleId} assigned to user ${userId}`,
+				success: true
+			});
+
 			return { success: true, message: 'Role assigned successfully' };
 		} catch (error) {
 			console.error('Error assigning role:', error);
+
+			// Log failure
+			await ActivityLogService.logFailure(
+				ActivityActions.ROLE_ASSIGN,
+				ActivityCategory.ROLE,
+				error instanceof Error ? error.message : 'Unknown error',
+				{
+					userId: locals.user?.id,
+					ipAddress: request.headers.get('x-forwarded-for')?.split(',')[0].trim() || 'unknown',
+					userAgent: request.headers.get('user-agent'),
+					resourceType: 'user',
+					resourceId: userId,
+					metadata: { roleId },
+					severity: LogSeverity.ERROR
+				}
+			);
+
 			return fail(500, { message: 'Failed to assign role' });
 		}
 	},
@@ -98,9 +137,42 @@ export const actions = {
 
 		try {
 			await PermissionService.removeRole(userId, roleId);
+
+			// Log role removal
+			await ActivityLogService.log({
+				userId: locals.user?.id,
+				ipAddress: request.headers.get('x-forwarded-for')?.split(',')[0].trim() || 'unknown',
+				userAgent: request.headers.get('user-agent'),
+				action: ActivityActions.ROLE_REVOKE,
+				category: ActivityCategory.ROLE,
+				severity: LogSeverity.INFO,
+				resourceType: 'user',
+				resourceId: userId,
+				metadata: { roleId, revokedBy: locals.user?.id },
+				message: `Role ${roleId} removed from user ${userId}`,
+				success: true
+			});
+
 			return { success: true, message: 'Role removed successfully' };
 		} catch (error) {
 			console.error('Error removing role:', error);
+
+			// Log failure
+			await ActivityLogService.logFailure(
+				ActivityActions.ROLE_REVOKE,
+				ActivityCategory.ROLE,
+				error instanceof Error ? error.message : 'Unknown error',
+				{
+					userId: locals.user?.id,
+					ipAddress: request.headers.get('x-forwarded-for')?.split(',')[0].trim() || 'unknown',
+					userAgent: request.headers.get('user-agent'),
+					resourceType: 'user',
+					resourceId: userId,
+					metadata: { roleId },
+					severity: LogSeverity.ERROR
+				}
+			);
+
 			return fail(500, { message: 'Failed to remove role' });
 		}
 	},
@@ -188,9 +260,39 @@ export const actions = {
 				passwordHash
 			});
 
+			// Log user creation
+			await ActivityLogService.log({
+				userId: locals.user?.id,
+				ipAddress: request.headers.get('x-forwarded-for')?.split(',')[0].trim() || 'unknown',
+				userAgent: request.headers.get('user-agent'),
+				action: ActivityActions.USER_CREATE,
+				category: ActivityCategory.USER,
+				severity: LogSeverity.INFO,
+				resourceType: 'user',
+				resourceId: userId,
+				metadata: { username, email, firstName, lastName, createdBy: locals.user?.id },
+				message: `User created: ${username} (${email})`,
+				success: true
+			});
+
 			return { success: true, message: 'User created successfully' };
 		} catch (error) {
 			console.error('Error creating user:', error);
+
+			// Log failure
+			await ActivityLogService.logFailure(
+				ActivityActions.USER_CREATE,
+				ActivityCategory.USER,
+				error instanceof Error ? error.message : 'Unknown error',
+				{
+					userId: locals.user?.id,
+					ipAddress: request.headers.get('x-forwarded-for')?.split(',')[0].trim() || 'unknown',
+					userAgent: request.headers.get('user-agent'),
+					metadata: { username, email },
+					severity: LogSeverity.ERROR
+				}
+			);
+
 			return fail(500, { message: 'Failed to create user' });
 		}
 	},
@@ -280,9 +382,41 @@ export const actions = {
 				})
 				.where(eq(table.user.id, userId));
 
+			// Log user update
+			await ActivityLogService.log({
+				userId: locals.user?.id,
+				ipAddress: request.headers.get('x-forwarded-for')?.split(',')[0].trim() || 'unknown',
+				userAgent: request.headers.get('user-agent'),
+				action: ActivityActions.USER_UPDATE,
+				category: ActivityCategory.USER,
+				severity: LogSeverity.INFO,
+				resourceType: 'user',
+				resourceId: userId,
+				metadata: { username, email, firstName, lastName, updatedBy: locals.user?.id },
+				message: `User updated: ${username}`,
+				success: true
+			});
+
 			return { success: true, message: 'User updated successfully' };
 		} catch (error) {
 			console.error('Error updating user:', error);
+
+			// Log failure
+			await ActivityLogService.logFailure(
+				ActivityActions.USER_UPDATE,
+				ActivityCategory.USER,
+				error instanceof Error ? error.message : 'Unknown error',
+				{
+					userId: locals.user?.id,
+					ipAddress: request.headers.get('x-forwarded-for')?.split(',')[0].trim() || 'unknown',
+					userAgent: request.headers.get('user-agent'),
+					resourceType: 'user',
+					resourceId: userId,
+					metadata: { username },
+					severity: LogSeverity.ERROR
+				}
+			);
+
 			return fail(500, { message: 'Failed to update user' });
 		}
 	},
@@ -320,12 +454,47 @@ export const actions = {
 			// Delete user's sessions
 			await db.delete(table.session).where(eq(table.session.userId, userId));
 
+			// Log user deletion (before deleting)
+			const deletedUsername = existingUser[0].username;
+			const deletedEmail = existingUser[0].email;
+
 			// Delete user
 			await db.delete(table.user).where(eq(table.user.id, userId));
+
+			// Log user deletion
+			await ActivityLogService.log({
+				userId: locals.user?.id,
+				ipAddress: request.headers.get('x-forwarded-for')?.split(',')[0].trim() || 'unknown',
+				userAgent: request.headers.get('user-agent'),
+				action: ActivityActions.USER_DELETE,
+				category: ActivityCategory.USER,
+				severity: LogSeverity.WARNING,
+				resourceType: 'user',
+				resourceId: userId,
+				metadata: { username: deletedUsername, email: deletedEmail, deletedBy: locals.user?.id },
+				message: `User deleted: ${deletedUsername} (${deletedEmail})`,
+				success: true
+			});
 
 			return { success: true, message: 'User deleted successfully' };
 		} catch (error) {
 			console.error('Error deleting user:', error);
+
+			// Log failure
+			await ActivityLogService.logFailure(
+				ActivityActions.USER_DELETE,
+				ActivityCategory.USER,
+				error instanceof Error ? error.message : 'Unknown error',
+				{
+					userId: locals.user?.id,
+					ipAddress: request.headers.get('x-forwarded-for')?.split(',')[0].trim() || 'unknown',
+					userAgent: request.headers.get('user-agent'),
+					resourceType: 'user',
+					resourceId: userId,
+					severity: LogSeverity.ERROR
+				}
+			);
+
 			return fail(500, { message: 'Failed to delete user' });
 		}
 	},
@@ -364,9 +533,40 @@ export const actions = {
 				})
 				.where(eq(table.user.id, userId));
 
+			// Log account unlock
+			await ActivityLogService.log({
+				userId: locals.user?.id,
+				ipAddress: request.headers.get('x-forwarded-for')?.split(',')[0].trim() || 'unknown',
+				userAgent: request.headers.get('user-agent'),
+				action: ActivityActions.USER_UNLOCK,
+				category: ActivityCategory.USER,
+				severity: LogSeverity.INFO,
+				resourceType: 'user',
+				resourceId: userId,
+				metadata: { unlockedBy: locals.user?.id },
+				message: `User account unlocked: ${existingUser[0].username}`,
+				success: true
+			});
+
 			return { success: true, message: 'Account unlocked successfully' };
 		} catch (error) {
 			console.error('Error unlocking user:', error);
+
+			// Log failure
+			await ActivityLogService.logFailure(
+				ActivityActions.USER_UNLOCK,
+				ActivityCategory.USER,
+				error instanceof Error ? error.message : 'Unknown error',
+				{
+					userId: locals.user?.id,
+					ipAddress: request.headers.get('x-forwarded-for')?.split(',')[0].trim() || 'unknown',
+					userAgent: request.headers.get('user-agent'),
+					resourceType: 'user',
+					resourceId: userId,
+					severity: LogSeverity.ERROR
+				}
+			);
+
 			return fail(500, { message: 'Failed to unlock account' });
 		}
 	}

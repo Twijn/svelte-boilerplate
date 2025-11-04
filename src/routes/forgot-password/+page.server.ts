@@ -2,6 +2,12 @@ import { fail, redirect } from '@sveltejs/kit';
 import { validateEmail } from '$lib/server/auth';
 import { sendPasswordResetEmail } from '$lib/server/password-reset';
 import { RateLimitService } from '$lib/server/rate-limit';
+import {
+	ActivityLogService,
+	ActivityCategory,
+	ActivityActions,
+	LogSeverity
+} from '$lib/server/activity-log';
 import type { Actions, PageServerLoad } from './$types';
 
 export const load: PageServerLoad = async ({ locals }) => {
@@ -41,7 +47,21 @@ export const actions: Actions = {
 		}
 
 		try {
-			await sendPasswordResetEmail(email);
+			const result = await sendPasswordResetEmail(email);
+
+			// Log password reset request
+			await ActivityLogService.log({
+				ipAddress: clientIP,
+				userAgent: request.headers.get('user-agent'),
+				action: ActivityActions.PASSWORD_RESET_REQUEST,
+				category: ActivityCategory.AUTH,
+				severity: LogSeverity.INFO,
+				resourceType: 'user',
+				resourceId: result ? 'found' : 'not_found',
+				metadata: { email: email.toString() },
+				message: `Password reset requested for email: ${email}`,
+				success: true
+			});
 
 			// Always return success to prevent email enumeration
 			return {
@@ -51,6 +71,20 @@ export const actions: Actions = {
 			};
 		} catch (error) {
 			console.error('Password reset error:', error);
+
+			// Log failed password reset
+			await ActivityLogService.logFailure(
+				ActivityActions.PASSWORD_RESET_REQUEST,
+				ActivityCategory.AUTH,
+				error instanceof Error ? error.message : 'Unknown error',
+				{
+					ipAddress: clientIP,
+					userAgent: request.headers.get('user-agent'),
+					metadata: { email: email.toString() },
+					severity: LogSeverity.ERROR
+				}
+			);
+
 			return fail(500, {
 				error: 'Failed to send password reset email. Please try again later.',
 				email: typeof email === 'string' ? email : ''
