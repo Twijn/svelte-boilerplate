@@ -17,6 +17,7 @@
 		faClock
 	} from '@fortawesome/free-solid-svg-icons';
 	import Button from '$lib/components/ui/Button.svelte';
+	import { APP_NAME } from '$lib/consts';
 
 	const { data } = $props();
 
@@ -211,6 +212,10 @@
 			filterForm.dateTo
 	);
 </script>
+
+<svelte:head>
+	<title>Activity Logs - Admin | {APP_NAME}</title>
+</svelte:head>
 
 <Heading
 	text="Activity Logs"

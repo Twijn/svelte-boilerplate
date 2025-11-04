@@ -7,6 +7,7 @@
 	import AuthFooter from '$lib/components/auth/AuthFooter.svelte';
 	import type { ActionData } from './$types';
 	import CenteredSection from '$lib/components/ui/CenteredSection.svelte';
+	import { APP_NAME } from '$lib/consts';
 
 	let { form }: { form: ActionData } = $props();
 
@@ -14,7 +15,7 @@
 </script>
 
 <svelte:head>
-	<title>Forgot Password</title>
+	<title>Forgot Password | {APP_NAME}</title>
 </svelte:head>
 
 <CenteredSection heading="Forgot Password">

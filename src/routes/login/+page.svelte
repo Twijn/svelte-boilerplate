@@ -9,6 +9,10 @@
 	const { form }: { form: ActionData } = $props();
 </script>
 
+<svelte:head>
+	<title>Login | {APP_NAME}</title>
+</svelte:head>
+
 <CenteredSection heading="Login">
 	<p>Please use the form below to sign in to {APP_NAME}!</p>
 

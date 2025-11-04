@@ -2,7 +2,12 @@
 	import { enhance } from '$app/forms';
 	import Button from '$lib/components/ui/Button.svelte';
 	import CenteredSection from '$lib/components/ui/CenteredSection.svelte';
+	import { APP_NAME } from '$lib/consts';
 </script>
+
+<svelte:head>
+	<title>Log Out | {APP_NAME}</title>
+</svelte:head>
 
 <CenteredSection heading="Sign Out">
 	<div class="form-container">

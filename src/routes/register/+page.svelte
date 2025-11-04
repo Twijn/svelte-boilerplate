@@ -9,6 +9,10 @@
 	const { form }: { form: ActionData } = $props();
 </script>
 
+<svelte:head>
+	<title>Register | {APP_NAME}</title>
+</svelte:head>
+
 <CenteredSection heading="Create Account">
 	<p class="form-intro">Join <strong>{APP_NAME}</strong> and get started today!</p>
 

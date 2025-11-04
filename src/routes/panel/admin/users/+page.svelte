@@ -6,6 +6,7 @@
 	import { enhance } from '$app/forms';
 	import { notifications } from '$lib/stores/notifications';
 	import Heading from '$lib/components/layout/Heading.svelte';
+	import { APP_NAME } from '$lib/consts.js';
 
 	type User = {
 		id: string;
@@ -131,7 +132,7 @@
 </script>
 
 <svelte:head>
-	<title>User Management - Admin</title>
+	<title>User Management - Admin | {APP_NAME}</title>
 </svelte:head>
 
 <Heading

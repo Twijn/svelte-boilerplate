@@ -1,10 +1,11 @@
 <script lang="ts">
 	import ErrorDisplay from '$lib/components/ui/ErrorDisplay.svelte';
 	import Button from '$lib/components/ui/Button.svelte';
+	import { APP_NAME } from '$lib/consts';
 </script>
 
 <svelte:head>
-	<title>Unauthorized Access</title>
+	<title>Unauthorized Access | {APP_NAME}</title>
 </svelte:head>
 
 <ErrorDisplay
