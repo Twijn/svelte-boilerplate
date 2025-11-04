@@ -3,7 +3,7 @@ import { db } from '$lib/server/db';
 import * as table from '$lib/server/db/schema';
 import { fail, redirect } from '@sveltejs/kit';
 import { hash } from '@node-rs/argon2';
-import { PermissionService, SYSTEM_ROLES } from '$lib/server/permissions';
+import { PermissionService } from '$lib/server/permissions';
 import { RateLimitService } from '$lib/server/rate-limit';
 import { ActivityLogService, ActivityCategory, ActivityActions } from '$lib/server/activity-log';
 
@@ -108,7 +108,7 @@ export const actions = {
 			});
 
 			// Assign default user role
-			await PermissionService.assignRole(userId, SYSTEM_ROLES.USER.id);
+			await PermissionService.assignRole(userId, 'user');
 
 			const sessionToken = auth.generateSessionToken();
 			const session = await auth.createSession(sessionToken, userId);

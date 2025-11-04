@@ -129,13 +129,13 @@ export const load = requirePermission(PERMISSIONS.REPORTS_GENERATE, async ({ loc
 
 ## 🔒 System Roles
 
-System roles are defined in `src/lib/server/permissions.ts` and automatically created:
+System roles are defined in `src/lib/server/seed.ts` and created during database seeding:
 
-- **Super Admin** - Gets ALL permissions
-- **Admin** - Gets most permissions
-- **User** - Gets basic read permission
+- **Super Admin** (`super-admin`) - Gets ALL permissions
+- **Admin** (`admin`) - Gets most permissions
+- **User** (`user`) - Gets basic read permission
 
-To modify what permissions a system role gets, edit the `SYSTEM_ROLES` object.
+To modify what permissions a system role gets, edit the `SYSTEM_ROLES` object in `seed.ts` and re-run the seed script.
 
 ---
 

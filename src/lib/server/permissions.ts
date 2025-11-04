@@ -6,64 +6,9 @@ import { generateId } from '$lib/server/utils';
 import { PERMISSIONS } from '$lib/constants/permissions';
 
 // Re-export for convenience
-export { PERMISSIONS }; // System roles that should be created by default
-export const SYSTEM_ROLES = {
-	SUPER_ADMIN: {
-		id: 'super-admin',
-		name: 'Super Admin',
-		description: 'Full system access',
-		permissions: Object.values(PERMISSIONS),
-		isSystemRole: true
-	},
-	ADMIN: {
-		id: 'admin',
-		name: 'Administrator',
-		description: 'Administrative access',
-		permissions: [
-			PERMISSIONS.READ,
-			PERMISSIONS.WRITE,
-			PERMISSIONS.CREATE,
-			PERMISSIONS.DELETE,
-			PERMISSIONS.ADMIN,
-			PERMISSIONS.MANAGE_USERS,
-			PERMISSIONS.VIEW_LOGS
-		],
-		isSystemRole: true
-	},
-	USER: {
-		id: 'user',
-		name: 'User',
-		description: 'Basic user access',
-		permissions: [PERMISSIONS.READ],
-		isSystemRole: true
-	}
-} as const;
+export { PERMISSIONS };
 
 export class PermissionService {
-	/**
-	 * Initialize system roles (run this during app startup)
-	 */
-	static async initializeSystemRoles() {
-		for (const roleData of Object.values(SYSTEM_ROLES)) {
-			const existingRole = await db
-				.select()
-				.from(table.role)
-				.where(eq(table.role.id, roleData.id))
-				.limit(1);
-
-			if (existingRole.length === 0) {
-				await db.insert(table.role).values({
-					id: roleData.id,
-					name: roleData.name,
-					description: roleData.description,
-					permissions: [...roleData.permissions], // Convert readonly array to mutable
-					isSystemRole: roleData.isSystemRole,
-					createdAt: new Date()
-				});
-			}
-		}
-	}
-
 	/**
 	 * Assign a role to a user
 	 */

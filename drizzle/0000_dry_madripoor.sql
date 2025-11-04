@@ -16,6 +16,15 @@ CREATE TABLE "activity_log" (
 	"duration" text
 );
 --> statement-breakpoint
+CREATE TABLE "email_change_token" (
+	"id" text PRIMARY KEY NOT NULL,
+	"user_id" text NOT NULL,
+	"new_email" text NOT NULL,
+	"token_hash" text NOT NULL,
+	"expires_at" timestamp with time zone NOT NULL,
+	"created_at" timestamp with time zone DEFAULT now() NOT NULL
+);
+--> statement-breakpoint
 CREATE TABLE "password_reset_token" (
 	"id" text PRIMARY KEY NOT NULL,
 	"user_id" text NOT NULL,
@@ -56,11 +65,20 @@ CREATE TABLE "user" (
 	"username" text NOT NULL,
 	"email" text NOT NULL,
 	"password_hash" text NOT NULL,
+	"avatar" text,
+	"bio" text,
+	"location" text,
+	"website" text,
+	"two_factor_secret" text,
+	"two_factor_enabled" boolean DEFAULT false NOT NULL,
+	"two_factor_backup_codes" json,
 	"is_locked" boolean DEFAULT false NOT NULL,
 	"locked_at" timestamp with time zone,
 	"locked_until" timestamp with time zone,
 	"failed_login_attempts" text DEFAULT '0' NOT NULL,
 	"last_failed_login" timestamp with time zone,
+	"created_at" timestamp with time zone DEFAULT now() NOT NULL,
+	"updated_at" timestamp with time zone DEFAULT now() NOT NULL,
 	CONSTRAINT "user_username_unique" UNIQUE("username"),
 	CONSTRAINT "user_email_unique" UNIQUE("email")
 );
@@ -84,6 +102,7 @@ CREATE TABLE "user_role" (
 );
 --> statement-breakpoint
 ALTER TABLE "activity_log" ADD CONSTRAINT "activity_log_user_id_user_id_fk" FOREIGN KEY ("user_id") REFERENCES "public"."user"("id") ON DELETE set null ON UPDATE no action;--> statement-breakpoint
+ALTER TABLE "email_change_token" ADD CONSTRAINT "email_change_token_user_id_user_id_fk" FOREIGN KEY ("user_id") REFERENCES "public"."user"("id") ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
 ALTER TABLE "password_reset_token" ADD CONSTRAINT "password_reset_token_user_id_user_id_fk" FOREIGN KEY ("user_id") REFERENCES "public"."user"("id") ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
 ALTER TABLE "session" ADD CONSTRAINT "session_user_id_user_id_fk" FOREIGN KEY ("user_id") REFERENCES "public"."user"("id") ON DELETE no action ON UPDATE no action;--> statement-breakpoint
 ALTER TABLE "user_node_permission" ADD CONSTRAINT "user_node_permission_user_id_user_id_fk" FOREIGN KEY ("user_id") REFERENCES "public"."user"("id") ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
