@@ -494,7 +494,7 @@
 								authenticator app.
 							</p>
 							<div class="backup-codes">
-								{#each data.backupCodes as code}
+								{#each data.backupCodes as code (code)}
 									<code class="backup-code">{code}</code>
 								{/each}
 							</div>
