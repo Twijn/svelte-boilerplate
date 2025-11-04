@@ -209,13 +209,17 @@
 		}
 	}}
 	title="Remove Role"
-	message={selectedUser && roleToRemove
-		? `Are you sure you want to remove the <strong>${roleToRemove.name}</strong> role from <strong>${selectedUser.firstName} ${selectedUser.lastName}</strong>?`
-		: ''}
 	warning="This action cannot be undone."
 	confirmText="Remove Role"
 	confirmVariant="error"
-/>
+>
+	{#snippet messageSnippet()}
+		<p>
+			Are you sure you want to remove the <strong>{roleToRemove?.name}</strong> role from
+			<strong>{selectedUser?.firstName} {selectedUser?.lastName}</strong>?
+		</p>
+	{/snippet}
+</ConfirmModal>
 
 {#if selectedUser && roleToRemove}
 	<form
@@ -406,13 +410,20 @@
 		}
 	}}
 	title="Delete User"
-	message={selectedUser
-		? `Are you sure you want to delete <strong>${selectedUser.firstName} ${selectedUser.lastName}</strong>?`
-		: ''}
 	warning="This action cannot be undone. All user data, roles, and sessions will be permanently deleted."
 	confirmText="Delete User"
 	confirmVariant="error"
-/>
+>
+	{#snippet messageSnippet()}
+		{#if selectedUser}
+			Are you sure you want to delete <strong
+				>${selectedUser.firstName} ${selectedUser.lastName}</strong
+			>?
+		{:else}
+			No selected user.
+		{/if}
+	{/snippet}
+</ConfirmModal>
 
 {#if selectedUser}
 	<form
@@ -437,12 +448,19 @@
 		}
 	}}
 	title="Unlock Account"
-	message={selectedUser
-		? `Are you sure you want to unlock <strong>${selectedUser.firstName} ${selectedUser.lastName}</strong>'s account?`
-		: ''}
 	confirmText="Unlock Account"
 	confirmVariant="primary"
-/>
+>
+	{#snippet messageSnippet()}
+		{#if selectedUser}
+			Are you sure you want to unlock <strong
+				>{selectedUser.firstName} {selectedUser.lastName}</strong
+			>'s account?
+		{:else}
+			No selected user.
+		{/if}
+	{/snippet}
+</ConfirmModal>
 
 {#if selectedUser}
 	<form

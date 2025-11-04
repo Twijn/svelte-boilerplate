@@ -2,7 +2,6 @@
 	import { enhance } from '$app/forms';
 	import Button from '$lib/components/ui/Button.svelte';
 	import Alert from '$lib/components/ui/dialogs/Alert.svelte';
-	import AuthHeader from '$lib/components/auth/AuthHeader.svelte';
 	import AuthInput from '$lib/components/auth/AuthInput.svelte';
 	import AuthFooter from '$lib/components/auth/AuthFooter.svelte';
 	import type { ActionData } from './$types';
@@ -61,11 +60,11 @@
 		<AuthFooter>
 			<p>
 				Remember your password?
-				<a href="/login">Back to login</a>
+				<a href="/login" data-sveltekit-preload-data="hover">Back to login</a>
 			</p>
 			<p>
 				Don't have an account?
-				<a href="/register">Sign up</a>
+				<a href="/register" data-sveltekit-preload-data="hover">Sign up</a>
 			</p>
 		</AuthFooter>
 	{/if}

@@ -84,12 +84,10 @@
 		</form>
 
 		<AuthFooter>
-			{#snippet children()}
-				<p>
-					Remember your password?
-					<a href="/login">Back to login</a>
-				</p>
-			{/snippet}
+			<p>
+				Remember your password?
+				<a href="/login">Back to login</a>
+			</p>
 		</AuthFooter>
 	{/if}
 </CenteredSection>

@@ -31,11 +31,7 @@
 	}: Props = $props();
 
 	let showPassword = $state(false);
-	let inputValue = $state(value);
-
-	$effect(() => {
-		inputValue = value;
-	});
+	let inputValue = $derived(value);
 </script>
 
 <div class="form-group">

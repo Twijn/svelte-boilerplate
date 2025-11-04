@@ -134,10 +134,10 @@
 
 	.link {
 		background: transparent;
-		color: var(--theme-color-2);
+		color: #e4e4e4;
 		border: none;
 		padding: 0.25rem 0;
-		font-weight: 500;
+		font-weight: 600;
 		font-size: 0.9rem;
 		box-shadow: none;
 		position: relative;

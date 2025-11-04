@@ -107,29 +107,103 @@
 
 <!-- Create Role Modal -->
 <Modal bind:isOpen={showCreateModal} onClose={closeModals} title="Create New Role" size="medium">
-	{#snippet children()}
-		<form method="POST" action="?/createRole" use:enhance>
+	<form method="POST" action="?/createRole" use:enhance>
+		<div class="form-group">
+			<label for="role-name">Role Name:</label>
+			<input
+				id="role-name"
+				name="name"
+				type="text"
+				bind:value={newRoleName}
+				placeholder="e.g., Content Manager"
+				required
+			/>
+		</div>
+
+		<div class="form-group">
+			<label for="role-description">Description (optional):</label>
+			<textarea
+				id="role-description"
+				name="description"
+				bind:value={newRoleDescription}
+				placeholder="Brief description of this role's purpose"
+				rows="3"
+			></textarea>
+		</div>
+
+		<div class="form-group">
+			<div class="form-label">Permissions:</div>
+			<div class="permissions-grid">
+				{#each data.availablePermissions as permission}
+					<label class="permission-checkbox">
+						<input
+							type="checkbox"
+							name="permissions"
+							value={permission.value}
+							checked={selectedPermissions.includes(permission.value)}
+							onchange={() => togglePermission(permission.value)}
+						/>
+						<span>{permission.label}</span>
+					</label>
+				{/each}
+			</div>
+		</div>
+
+		<div class="modal-actions">
+			<Button type="button" variant="secondary" onClick={closeModals}>Cancel</Button>
+			<Button
+				type="submit"
+				variant="primary"
+				disabled={!newRoleName.trim() || selectedPermissions.length === 0}
+			>
+				Create Role
+			</Button>
+		</div>
+	</form>
+</Modal>
+
+<!-- Edit Role Modal -->
+<Modal
+	isOpen={showEditModal && !!selectedRole}
+	onClose={closeModals}
+	title={selectedRole ? `Edit Role: ${selectedRole.name}` : ''}
+	size="medium"
+>
+	{#if selectedRole}
+		<form method="POST" action="?/updateRole" use:enhance>
+			<input type="hidden" name="roleId" value={selectedRole.id} />
+
 			<div class="form-group">
-				<label for="role-name">Role Name:</label>
+				<label for="edit-role-name">Role Name:</label>
 				<input
-					id="role-name"
-					name="name"
+					id="edit-role-name"
 					type="text"
+					name="name"
 					bind:value={newRoleName}
-					placeholder="e.g., Content Manager"
 					required
+					placeholder="e.g., Editor"
+					disabled={selectedRole.isSystemRole}
 				/>
+				{#if selectedRole.isSystemRole}
+					<small style="color: rgb(var(--orange));">System role names cannot be changed</small>
+				{/if}
 			</div>
 
 			<div class="form-group">
-				<label for="role-description">Description (optional):</label>
+				<label for="edit-role-description">Description:</label>
 				<textarea
-					id="role-description"
+					id="edit-role-description"
 					name="description"
 					bind:value={newRoleDescription}
-					placeholder="Brief description of this role's purpose"
 					rows="3"
+					placeholder="e.g., Can edit content but cannot publish"
+					disabled={selectedRole.isSystemRole}
 				></textarea>
+				{#if selectedRole.isSystemRole}
+					<small style="color: rgb(var(--orange));"
+						>System role descriptions cannot be changed</small
+					>
+				{/if}
 			</div>
 
 			<div class="form-group">
@@ -143,11 +217,17 @@
 								value={permission.value}
 								checked={selectedPermissions.includes(permission.value)}
 								onchange={() => togglePermission(permission.value)}
+								disabled={selectedRole.isSystemRole}
 							/>
 							<span>{permission.label}</span>
 						</label>
 					{/each}
 				</div>
+				{#if selectedRole.isSystemRole}
+					<small style="color: rgb(var(--orange)); margin-top: 0.5rem; display: block;">
+						System role permissions cannot be modified
+					</small>
+				{/if}
 			</div>
 
 			<div class="modal-actions">
@@ -155,97 +235,13 @@
 				<Button
 					type="submit"
 					variant="primary"
-					disabled={!newRoleName.trim() || selectedPermissions.length === 0}
+					disabled={selectedPermissions.length === 0 || selectedRole.isSystemRole}
 				>
-					Create Role
+					Update Role
 				</Button>
 			</div>
 		</form>
-	{/snippet}
-</Modal>
-
-<!-- Edit Role Modal -->
-<Modal
-	isOpen={showEditModal && !!selectedRole}
-	onClose={closeModals}
-	title={selectedRole ? `Edit Role: ${selectedRole.name}` : ''}
-	size="medium"
->
-	{#snippet children()}
-		{#if selectedRole}
-			<form method="POST" action="?/updateRole" use:enhance>
-				<input type="hidden" name="roleId" value={selectedRole.id} />
-
-				<div class="form-group">
-					<label for="edit-role-name">Role Name:</label>
-					<input
-						id="edit-role-name"
-						type="text"
-						name="name"
-						bind:value={newRoleName}
-						required
-						placeholder="e.g., Editor"
-						disabled={selectedRole.isSystemRole}
-					/>
-					{#if selectedRole.isSystemRole}
-						<small style="color: rgb(var(--orange));">System role names cannot be changed</small>
-					{/if}
-				</div>
-
-				<div class="form-group">
-					<label for="edit-role-description">Description:</label>
-					<textarea
-						id="edit-role-description"
-						name="description"
-						bind:value={newRoleDescription}
-						rows="3"
-						placeholder="e.g., Can edit content but cannot publish"
-						disabled={selectedRole.isSystemRole}
-					></textarea>
-					{#if selectedRole.isSystemRole}
-						<small style="color: rgb(var(--orange));"
-							>System role descriptions cannot be changed</small
-						>
-					{/if}
-				</div>
-
-				<div class="form-group">
-					<div class="form-label">Permissions:</div>
-					<div class="permissions-grid">
-						{#each data.availablePermissions as permission}
-							<label class="permission-checkbox">
-								<input
-									type="checkbox"
-									name="permissions"
-									value={permission.value}
-									checked={selectedPermissions.includes(permission.value)}
-									onchange={() => togglePermission(permission.value)}
-									disabled={selectedRole.isSystemRole}
-								/>
-								<span>{permission.label}</span>
-							</label>
-						{/each}
-					</div>
-					{#if selectedRole.isSystemRole}
-						<small style="color: rgb(var(--orange)); margin-top: 0.5rem; display: block;">
-							System role permissions cannot be modified
-						</small>
-					{/if}
-				</div>
-
-				<div class="modal-actions">
-					<Button type="button" variant="secondary" onClick={closeModals}>Cancel</Button>
-					<Button
-						type="submit"
-						variant="primary"
-						disabled={selectedPermissions.length === 0 || selectedRole.isSystemRole}
-					>
-						Update Role
-					</Button>
-				</div>
-			</form>
-		{/if}
-	{/snippet}
+	{/if}
 </Modal>
 
 <!-- Delete Role Modal -->

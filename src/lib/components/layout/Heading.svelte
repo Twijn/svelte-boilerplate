@@ -27,7 +27,7 @@
 	{@render children?.()}
 	{#if buttons}
 		<div class="buttons">
-			{#each buttons as button}
+			{#each buttons as button (button.text)}
 				<Button
 					type={button.type ?? 'button'}
 					variant={button.variant ?? 'primary'}

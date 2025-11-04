@@ -4,7 +4,6 @@
 	import {
 		faEdit,
 		faTrash,
-		faKey,
 		faUsers,
 		faShieldAlt,
 		faCrown,
@@ -44,14 +43,6 @@
 		return faUser;
 	}
 
-	function getRoleColor(roleName: string) {
-		const lowerName = roleName.toLowerCase();
-		if (lowerName.includes('super') || lowerName.includes('root')) return 'var(--orange)';
-		if (lowerName.includes('admin')) return 'var(--red)';
-		if (lowerName.includes('manager') || lowerName.includes('moderator')) return 'var(--blue)';
-		return 'var(--green)';
-	}
-
 	function formatPermissionLabel(permission: string): string {
 		return permission
 			.split('_')
@@ -74,38 +65,36 @@
 			{role.userCount} user{role.userCount !== 1 ? 's' : ''}
 		</span>
 	{/snippet}
-	{#snippet children()}
-		<div class="role-permissions">
+	<div class="role-permissions">
+		<h4>
+			Permissions <div class="badge badge-primary">{role.permissions.length}</div>
+		</h4>
+		<div class="permissions-list">
+			{#each role.permissions as permission}
+				<span class="permission-badge">
+					{formatPermissionLabel(permission)}
+				</span>
+			{/each}
+		</div>
+	</div>
+
+	{#if role.users.length > 0}
+		<div class="role-users">
 			<h4>
-				Permissions <div class="badge badge-primary">{role.permissions.length}</div>
+				Assigned Users <div class="badge badge-primary">{role.users.length}</div>
 			</h4>
-			<div class="permissions-list">
-				{#each role.permissions as permission}
-					<span class="permission-badge">
-						{formatPermissionLabel(permission)}
-					</span>
+			<div class="users-list">
+				{#each role.users.slice(0, 3) as user}
+					<div class="user-avatar" title="{user.firstName} {user.lastName}">
+						{user.firstName.charAt(0)}{user.lastName.charAt(0)}
+					</div>
 				{/each}
+				{#if role.users.length > 3}
+					<div class="more-users">+{role.users.length - 3}</div>
+				{/if}
 			</div>
 		</div>
-
-		{#if role.users.length > 0}
-			<div class="role-users">
-				<h4>
-					Assigned Users <div class="badge badge-primary">{role.users.length}</div>
-				</h4>
-				<div class="users-list">
-					{#each role.users.slice(0, 3) as user}
-						<div class="user-avatar" title="{user.firstName} {user.lastName}">
-							{user.firstName.charAt(0)}{user.lastName.charAt(0)}
-						</div>
-					{/each}
-					{#if role.users.length > 3}
-						<div class="more-users">+{role.users.length - 3}</div>
-					{/if}
-				</div>
-			</div>
-		{/if}
-	{/snippet}
+	{/if}
 	{#snippet actions()}
 		{#if !role.isSystemRole}
 			<Button variant="secondary" onClick={onEdit}>

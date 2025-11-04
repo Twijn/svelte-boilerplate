@@ -8,13 +8,14 @@
 	 */
 
 	import { PERMISSIONS } from '$lib/constants/permissions';
+	import type { Snippet } from 'svelte';
 
 	interface Props {
 		userPermissions?: string[];
 		requiredPermissions?: string[];
 		requireAll?: boolean; // If true, user must have ALL permissions. If false, user needs ANY permission.
-		fallback?: any; // Snippet to render if permission check fails
-		children: any;
+		fallback?: Snippet; // Snippet to render if permission check fails
+		children: Snippet;
 	}
 
 	const {

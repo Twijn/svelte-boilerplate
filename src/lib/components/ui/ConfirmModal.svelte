@@ -7,11 +7,13 @@
 		onClose: () => void;
 		onConfirm: () => void;
 		title: string;
-		message: string;
+		message?: string;
+		messageSnippet?: import('svelte').Snippet;
 		confirmText?: string;
 		cancelText?: string;
 		confirmVariant?: 'primary' | 'error' | 'success' | 'secondary';
 		warning?: string;
+		warningSnippet?: import('svelte').Snippet;
 	}
 
 	const {
@@ -20,10 +22,12 @@
 		onConfirm,
 		title,
 		message,
+		messageSnippet,
 		confirmText = 'Confirm',
 		cancelText = 'Cancel',
 		confirmVariant = 'primary',
-		warning
+		warning,
+		warningSnippet
 	}: Props = $props();
 
 	function handleConfirm() {
@@ -35,9 +39,21 @@
 <Modal isOpen={open} {onClose} {title} size="small">
 	{#snippet children()}
 		<div class="confirm-content">
-			<p class="message">{@html message}</p>
-			{#if warning}
-				<p class="warning">{warning}</p>
+			<div class="message">
+				{#if messageSnippet}
+					{@render messageSnippet()}
+				{:else if message}
+					<p>{message}</p>
+				{/if}
+			</div>
+			{#if warningSnippet || warning}
+				<div class="warning">
+					{#if warningSnippet}
+						{@render warningSnippet()}
+					{:else if warning}
+						<p>{warning}</p>
+					{/if}
+				</div>
 			{/if}
 		</div>
 
@@ -64,6 +80,10 @@
 		margin: 0 0 1rem 0;
 	}
 
+	.message :global(p) {
+		margin: 0;
+	}
+
 	.warning {
 		color: rgb(var(--orange));
 		font-weight: 500;
@@ -73,6 +93,10 @@
 		background: rgba(var(--orange), 0.1);
 		border-left: 3px solid rgb(var(--orange));
 		border-radius: 0.25rem;
+	}
+
+	.warning :global(p) {
+		margin: 0;
 	}
 
 	.confirm-actions {

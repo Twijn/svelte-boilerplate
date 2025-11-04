@@ -4,10 +4,10 @@
 		faShieldAlt,
 		faExclamationTriangle,
 		faSearch,
-		faCogs,
-		faBan
+		faCogs
 	} from '@fortawesome/free-solid-svg-icons';
 	import Button from '$lib/components/ui/Button.svelte';
+	import type { Snippet } from 'svelte';
 
 	type ErrorType = '403' | '404' | '500' | 'generic' | 'maintenance';
 
@@ -18,7 +18,7 @@
 		details?: string;
 		showHomeButton?: boolean;
 		showBackButton?: boolean;
-		customActions?: any; // Snippet for custom action buttons
+		customActions?: Snippet; // Snippet for custom action buttons
 	}
 
 	const {

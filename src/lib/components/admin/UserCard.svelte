@@ -76,78 +76,76 @@
 	initials={getUserInitials(user)}
 	initialsTitle="{user.firstName} {user.lastName}"
 >
-	{#snippet children()}
-		{#if user.isLocked}
-			{@const isTemporary = user.lockedUntil && new Date(user.lockedUntil) > new Date()}
-			{@const isPermanent = user.isLocked && !user.lockedUntil}
-			<button
-				class="lock-status locked clickable"
-				onclick={onUnlock}
-				disabled={!onUnlock}
-				title={onUnlock ? 'Click to unlock account' : 'Cannot unlock'}
-			>
-				<FontAwesomeIcon icon={faLock} />
-				<span>
-					{#if isPermanent}
-						<strong>Permanently Locked</strong>
-					{:else if isTemporary && user.lockedUntil}
-						{@const minutesRemaining = Math.ceil(
-							(new Date(user.lockedUntil).getTime() - Date.now()) / 60000
-						)}
-						<strong>Temporarily Locked</strong>
-						<br />
-						({minutesRemaining} min remaining)
-					{:else}
-						<strong>Locked</strong> (expired, auto-unlocking)
-					{/if}
-				</span>
-				{#if user.failedLoginAttempts && parseInt(user.failedLoginAttempts) > 0}
-					<span class="failed-attempts">
-						{user.failedLoginAttempts} failed attempts
-					</span>
+	{#if user.isLocked}
+		{@const isTemporary = user.lockedUntil && new Date(user.lockedUntil) > new Date()}
+		{@const isPermanent = user.isLocked && !user.lockedUntil}
+		<button
+			class="lock-status locked clickable"
+			onclick={onUnlock}
+			disabled={!onUnlock}
+			title={onUnlock ? 'Click to unlock account' : 'Cannot unlock'}
+		>
+			<FontAwesomeIcon icon={faLock} />
+			<span>
+				{#if isPermanent}
+					<strong>Permanently Locked</strong>
+				{:else if isTemporary && user.lockedUntil}
+					{@const minutesRemaining = Math.ceil(
+						(new Date(user.lockedUntil).getTime() - Date.now()) / 60000
+					)}
+					<strong>Temporarily Locked</strong>
+					<br />
+					({minutesRemaining} min remaining)
+				{:else}
+					<strong>Locked</strong> (expired, auto-unlocking)
 				{/if}
-			</button>
-		{:else}
-			<div class="lock-status unlocked">
-				<FontAwesomeIcon icon={faUnlock} />
-				<span>Account Active</span>
-			</div>
-		{/if}
-
-		<div class="user-info">
-			<p class="user-email">
-				<FontAwesomeIcon icon={faEnvelope} />
-				{user.email}
-			</p>
-		</div>
-
-		<div class="user-roles">
-			<h4>Roles ({user.roles.length})</h4>
-			{#if user.roles.length > 0}
-				<div class="roles-list">
-					{#each user.roles as role (role.id)}
-						{@const config = getRoleConfig(role.name)}
-						<div class="role-badge" style="border-color: {config.color};">
-							<FontAwesomeIcon icon={config.icon} />
-							<span>{role.name}</span>
-							{#if canRemoveRole(role, user.roles)}
-								<button
-									class="remove-role-btn"
-									onclick={() => onRemoveRole(role)}
-									title="Remove {role.name} role"
-									aria-label="Remove {role.name} role from {user.firstName} {user.lastName}"
-								>
-									<FontAwesomeIcon icon={faXmarkCircle} />
-								</button>
-							{/if}
-						</div>
-					{/each}
-				</div>
-			{:else}
-				<p class="no-roles">No roles assigned</p>
+			</span>
+			{#if user.failedLoginAttempts && parseInt(user.failedLoginAttempts) > 0}
+				<span class="failed-attempts">
+					{user.failedLoginAttempts} failed attempts
+				</span>
 			{/if}
+		</button>
+	{:else}
+		<div class="lock-status unlocked">
+			<FontAwesomeIcon icon={faUnlock} />
+			<span>Account Active</span>
 		</div>
-	{/snippet}
+	{/if}
+
+	<div class="user-info">
+		<p class="user-email">
+			<FontAwesomeIcon icon={faEnvelope} />
+			{user.email}
+		</p>
+	</div>
+
+	<div class="user-roles">
+		<h4>Roles ({user.roles.length})</h4>
+		{#if user.roles.length > 0}
+			<div class="roles-list">
+				{#each user.roles as role (role.id)}
+					{@const config = getRoleConfig(role.name)}
+					<div class="role-badge" style="border-color: {config.color};">
+						<FontAwesomeIcon icon={config.icon} />
+						<span>{role.name}</span>
+						{#if canRemoveRole(role, user.roles)}
+							<button
+								class="remove-role-btn"
+								onclick={() => onRemoveRole(role)}
+								title="Remove {role.name} role"
+								aria-label="Remove {role.name} role from {user.firstName} {user.lastName}"
+							>
+								<FontAwesomeIcon icon={faXmarkCircle} />
+							</button>
+						{/if}
+					</div>
+				{/each}
+			</div>
+		{:else}
+			<p class="no-roles">No roles assigned</p>
+		{/if}
+	</div>
 	{#snippet actions()}
 		<Button
 			variant="secondary"
