@@ -6,10 +6,7 @@
 		faShieldAlt,
 		faCrown,
 		faUserTie,
-		faX,
-		faXmarkCircle,
-		faPen,
-		faTrash
+		faXmarkCircle
 	} from '@fortawesome/free-solid-svg-icons';
 	import Card from '../ui/Card.svelte';
 
@@ -71,6 +68,7 @@
 	initials={getUserInitials(user)}
 	initialsTitle="{user.firstName} {user.lastName}"
 >
+	{#snippet header()}{/snippet}
 	{#snippet children()}
 		<div class="user-info">
 			<p class="user-email">

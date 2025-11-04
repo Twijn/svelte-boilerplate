@@ -4,6 +4,8 @@ import * as table from '$lib/server/db/schema';
 import { fail, redirect } from '@sveltejs/kit';
 import { hash } from '@node-rs/argon2';
 import { PermissionService, SYSTEM_ROLES } from '$lib/server/permissions';
+import { RateLimitService } from '$lib/server/rate-limit';
+import { ActivityLogService, ActivityCategory, ActivityActions } from '$lib/server/activity-log';
 
 export const load = async ({ locals }) => {
 	if (locals.user) {
@@ -19,6 +21,23 @@ export const actions = {
 		const email = formData.get('email');
 		const firstName = formData.get('first-name');
 		const lastName = formData.get('last-name');
+
+		// Get client IP for rate limiting
+		const clientIP =
+			event.request.headers.get('x-forwarded-for')?.split(',')[0].trim() ||
+			event.getClientAddress();
+
+		// Check rate limit for registration
+		const rateLimitCheck = await RateLimitService.checkRateLimit(clientIP, 'register');
+		if (!rateLimitCheck.allowed) {
+			return fail(429, {
+				message: `Too many registration attempts. Please try again in ${Math.ceil(rateLimitCheck.retryAfter! / 60)} minutes.`,
+				username: String(username || ''),
+				email: String(email || ''),
+				firstName: String(firstName || ''),
+				lastName: String(lastName || '')
+			});
+		}
 
 		const exit = (message: string) => {
 			return fail(400, {
@@ -68,6 +87,26 @@ export const actions = {
 				lastName
 			});
 
+			// Record successful registration
+			await RateLimitService.recordAttempt(clientIP, 'register');
+
+			// Log successful registration
+			await ActivityLogService.log({
+				userId,
+				ipAddress: clientIP,
+				userAgent: event.request.headers.get('user-agent'),
+				action: ActivityActions.REGISTER,
+				category: ActivityCategory.AUTH,
+				resourceType: 'user',
+				resourceId: userId,
+				success: true,
+				metadata: {
+					username: String(username),
+					email: String(email)
+				},
+				message: `New user registered: ${username}`
+			});
+
 			// Assign default user role
 			await PermissionService.assignRole(userId, SYSTEM_ROLES.USER.id);
 
@@ -76,6 +115,22 @@ export const actions = {
 			auth.setSessionTokenCookie(event, sessionToken, session.expiresAt);
 		} catch (err) {
 			console.error('Error creating user:', err);
+
+			// Log registration failure
+			await ActivityLogService.logFailure(
+				ActivityActions.REGISTER,
+				ActivityCategory.AUTH,
+				String(err),
+				{
+					ipAddress: clientIP,
+					metadata: {
+						username: String(username),
+						email: String(email)
+					},
+					message: 'Failed to create user account'
+				}
+			);
+
 			return fail(500, {
 				message: 'An error has occurred',
 				username: String(username || ''),

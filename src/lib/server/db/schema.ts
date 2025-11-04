@@ -6,7 +6,12 @@ export const user = pgTable('user', {
 	lastName: text('last_name').notNull(),
 	username: text('username').notNull().unique(),
 	email: text('email').notNull().unique(),
-	passwordHash: text('password_hash').notNull()
+	passwordHash: text('password_hash').notNull(),
+	isLocked: boolean('is_locked').notNull().default(false),
+	lockedAt: timestamp('locked_at', { withTimezone: true, mode: 'date' }),
+	lockedUntil: timestamp('locked_until', { withTimezone: true, mode: 'date' }),
+	failedLoginAttempts: text('failed_login_attempts').notNull().default('0'),
+	lastFailedLogin: timestamp('last_failed_login', { withTimezone: true, mode: 'date' })
 });
 
 export const session = pgTable('session', {
@@ -76,9 +81,40 @@ export const passwordResetToken = pgTable('password_reset_token', {
 	createdAt: timestamp('created_at', { withTimezone: true, mode: 'date' }).notNull().defaultNow()
 });
 
+// Activity log - tracks all actions and changes in the system
+export const activityLog = pgTable('activity_log', {
+	id: text('id').primaryKey(),
+	// Who performed the action
+	userId: text('user_id').references(() => user.id, { onDelete: 'set null' }), // null for anonymous/system actions
+	ipAddress: text('ip_address'), // IP address of the actor
+	userAgent: text('user_agent'), // Browser/client info
+
+	// What action was performed
+	action: text('action').notNull(), // e.g., 'user.login', 'user.create', 'role.update', 'rate_limit.check'
+	category: text('category').notNull(), // e.g., 'auth', 'user', 'role', 'permission', 'security', 'system'
+	severity: text('severity').notNull().default('info'), // 'debug', 'info', 'warning', 'error', 'critical'
+
+	// What was affected
+	resourceType: text('resource_type'), // e.g., 'user', 'role', 'session'
+	resourceId: text('resource_id'), // ID of the affected resource
+
+	// Additional context
+	metadata: json('metadata').$type<Record<string, unknown>>(), // Flexible JSON for any additional data
+	message: text('message'), // Human-readable description
+
+	// Status
+	success: boolean('success').notNull().default(true),
+	errorMessage: text('error_message'), // If success=false, what went wrong
+
+	// Timing
+	createdAt: timestamp('created_at', { withTimezone: true, mode: 'date' }).notNull().defaultNow(),
+	duration: text('duration') // Optional: how long the action took (in ms)
+});
+
 export type User = typeof user.$inferSelect;
 export type Role = typeof role.$inferSelect;
 export type UserRole = typeof userRole.$inferSelect;
 export type PermissionNode = typeof permissionNode.$inferSelect;
 export type UserNodePermission = typeof userNodePermission.$inferSelect;
 export type PasswordResetToken = typeof passwordResetToken.$inferSelect;
+export type ActivityLog = typeof activityLog.$inferSelect;

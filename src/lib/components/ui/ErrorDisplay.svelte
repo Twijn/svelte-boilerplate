@@ -1,6 +1,5 @@
 <script lang="ts">
 	import { FontAwesomeIcon } from '@fortawesome/svelte-fontawesome';
-	import type { IconDefinition } from '@fortawesome/fontawesome-svg-core';
 	import {
 		faShieldAlt,
 		faExclamationTriangle,
