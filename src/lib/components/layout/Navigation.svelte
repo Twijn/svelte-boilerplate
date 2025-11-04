@@ -2,7 +2,13 @@
 	import { page } from '$app/state';
 	import { FontAwesomeIcon } from '@fortawesome/svelte-fontawesome';
 	import type { IconDefinition } from '@fortawesome/fontawesome-svg-core';
-	import { faHome, faUserCog, faShieldAlt, faKey } from '@fortawesome/free-solid-svg-icons';
+	import {
+		faHome,
+		faUserCog,
+		faShieldAlt,
+		faKey,
+		faTimeline
+	} from '@fortawesome/free-solid-svg-icons';
 	import { PERMISSIONS } from '$lib/constants/permissions';
 
 	type NavigationLink = {
@@ -45,16 +51,27 @@
 					requiredPermissions: [PERMISSIONS.ADMIN]
 				},
 				{
+					icon: faTimeline,
+					name: 'Activity Logs',
+					href: '/panel/admin/activity',
+					requiredPermissions: [PERMISSIONS.VIEW_LOGS]
+				}
+			]
+		},
+		{
+			name: 'User & Role Management',
+			links: [
+				{
 					icon: faUserCog,
 					name: 'User Management',
 					href: '/panel/admin/users',
-					requiredPermissions: [PERMISSIONS.ADMIN]
+					requiredPermissions: [PERMISSIONS.MANAGE_USERS, PERMISSIONS.ADMIN]
 				},
 				{
-					icon: faShieldAlt,
+					icon: faKey,
 					name: 'Role Management',
 					href: '/panel/admin/roles',
-					requiredPermissions: [PERMISSIONS.ADMIN]
+					requiredPermissions: [PERMISSIONS.MANAGE_ROLES, PERMISSIONS.ADMIN]
 				}
 			]
 		}
@@ -70,13 +87,8 @@
 						return true;
 					}
 
-					// Admin users can see everything
-					if (userPermissions.includes(PERMISSIONS.ADMIN)) {
-						return true;
-					}
-
 					// Check if user has any of the required permissions
-					return link.requiredPermissions.some((permission) =>
+					return link.requiredPermissions.every((permission) =>
 						userPermissions.includes(permission)
 					);
 				})
