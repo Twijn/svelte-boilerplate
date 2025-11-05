@@ -114,6 +114,11 @@ export const actions: Actions = {
 		const session = await auth.createSession(sessionToken, user.id);
 		auth.setSessionTokenCookie(event, sessionToken, session.expiresAt);
 
+		// Check if password change is required
+		if (user.requirePasswordChange) {
+			throw redirect(302, '/panel/profile/password?required=true');
+		}
+
 		throw redirect(302, '/panel');
 	},
 
@@ -221,6 +226,11 @@ export const actions: Actions = {
 		const sessionToken = auth.generateSessionToken();
 		const session = await auth.createSession(sessionToken, user.id);
 		auth.setSessionTokenCookie(event, sessionToken, session.expiresAt);
+
+		// Check if password change is required
+		if (user.requirePasswordChange) {
+			throw redirect(302, '/panel/profile/password?required=true');
+		}
 
 		// Show warning if running low on backup codes
 		if (remainingCodes.length <= 2 && remainingCodes.length > 0) {

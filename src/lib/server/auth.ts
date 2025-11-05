@@ -41,7 +41,9 @@ export async function validateSessionToken(token: string) {
 				bio: table.user.bio,
 				location: table.user.location,
 				website: table.user.website,
-				twoFactorEnabled: table.user.twoFactorEnabled
+				twoFactorEnabled: table.user.twoFactorEnabled,
+				requirePasswordChange: table.user.requirePasswordChange,
+				emailVerified: table.user.emailVerified
 			},
 			session: table.session
 		})

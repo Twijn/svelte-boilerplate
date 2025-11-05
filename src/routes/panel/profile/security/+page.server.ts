@@ -133,7 +133,17 @@ export const actions: Actions = {
 		const totpCode = formData.get('totpCode') as string;
 		const backupCodesStr = formData.get('backupCodes') as string;
 
-		if (!totpCode || totpCode.length !== 6) {
+		if (!totpCode) {
+			return fail(400, {
+				message: 'Verification code is required',
+				success: false
+			});
+		}
+
+		// Clean the TOTP code (remove spaces, dashes, etc.)
+		const cleanedCode = totpCode.replace(/\s|-/g, '');
+
+		if (cleanedCode.length !== 6) {
 			return fail(400, {
 				message: 'Invalid verification code',
 				success: false
@@ -156,11 +166,12 @@ export const actions: Actions = {
 				});
 			}
 
-			// Verify TOTP code
-			const isValid = verifyTOTP(totpCode, user.twoFactorSecret);
+			// Verify TOTP code with a wider window during setup (±2 periods = ±60 seconds)
+			const isValid = verifyTOTP(cleanedCode, user.twoFactorSecret, 2);
 			if (!isValid) {
 				return fail(400, {
-					message: 'Invalid verification code. Please try again.',
+					message:
+						'Invalid verification code. Please ensure your device time is synchronized and try again.',
 					success: false,
 					action: 'verify2FA'
 				});

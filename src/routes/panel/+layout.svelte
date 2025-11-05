@@ -10,6 +10,7 @@
 	import Confirm from '$lib/components/ui/dialogs/Confirm.svelte';
 	import Prompt from '$lib/components/ui/dialogs/Prompt.svelte';
 	import Button from '$lib/components/ui/Button.svelte';
+	import VerificationBanner from '$lib/components/ui/VerificationBanner.svelte';
 
 	const { children, data } = $props();
 	const user = data.user;
@@ -69,6 +70,9 @@
 	</aside>
 	<div id="content">
 		<main class="container">
+			{#if user && !user.emailVerified}
+				<VerificationBanner />
+			{/if}
 			{@render children?.()}
 		</main>
 		<footer>

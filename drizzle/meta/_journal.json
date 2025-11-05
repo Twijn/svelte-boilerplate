@@ -8,6 +8,27 @@
       "when": 1762296773737,
       "tag": "0000_dry_madripoor",
       "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "7",
+      "when": 1762299273482,
+      "tag": "0001_dashing_famine",
+      "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1762302786081,
+      "tag": "0002_demonic_master_mold",
+      "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "7",
+      "when": 1762304788073,
+      "tag": "0003_broken_groot",
+      "breakpoints": true
     }
   ]
 }

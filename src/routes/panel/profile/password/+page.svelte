@@ -4,9 +4,10 @@
 	import ProfileTab from '$lib/components/ui/ProfileTab.svelte';
 	import { notifications } from '$lib/stores/notifications';
 	import { FontAwesomeIcon } from '@fortawesome/svelte-fontawesome';
-	import { faLock } from '@fortawesome/free-solid-svg-icons';
+	import { faLock, faExclamationTriangle } from '@fortawesome/free-solid-svg-icons';
+	import Alert from '$lib/components/ui/dialogs/Alert.svelte';
 
-	const { form } = $props();
+	const { form, data } = $props();
 
 	// Password form
 	let passwordForm = $state({
@@ -45,6 +46,13 @@
 	description="Choose a strong password to keep your account secure"
 	{hasUnsavedChanges}
 >
+	{#if data.required}
+		<Alert variant="warning">
+			<strong><FontAwesomeIcon icon={faExclamationTriangle} /> Password Change Required</strong>
+			<p>You must change your password before continuing to use the system.</p>
+		</Alert>
+	{/if}
+
 	<form
 		method="POST"
 		action="?/changePassword"

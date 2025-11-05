@@ -114,7 +114,10 @@ async function seed() {
 				email: 'admin@example.com',
 				passwordHash,
 				isLocked: false,
-				failedLoginAttempts: '0'
+				failedLoginAttempts: '0',
+				requirePasswordChange: true, // Force password change on first login
+				emailVerified: true, // Admin user is pre-verified
+				emailVerifiedAt: new Date() // Set verification timestamp
 			});
 			console.log('✅ Created admin user (username: admin, password: admin123)');
 

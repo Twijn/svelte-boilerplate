@@ -6,6 +6,10 @@ import { hash } from '@node-rs/argon2';
 import { PermissionService } from '$lib/server/permissions';
 import { RateLimitService } from '$lib/server/rate-limit';
 import { ActivityLogService, ActivityCategory, ActivityActions } from '$lib/server/activity-log';
+import {
+	createEmailVerificationToken,
+	sendVerificationEmail
+} from '$lib/server/email-verification';
 
 export const load = async ({ locals }) => {
 	if (locals.user) {
@@ -109,6 +113,15 @@ export const actions = {
 
 			// Assign default user role
 			await PermissionService.assignRole(userId, 'user');
+
+			// Send verification email
+			try {
+				const token = await createEmailVerificationToken(userId);
+				await sendVerificationEmail(String(email), token, event.url.origin);
+			} catch (emailErr) {
+				console.error('Error sending verification email:', emailErr);
+				// Continue with registration even if email fails
+			}
 
 			const sessionToken = auth.generateSessionToken();
 			const session = await auth.createSession(sessionToken, userId);

@@ -164,6 +164,11 @@ export const actions: Actions = {
 		const session = await auth.createSession(sessionToken, existingUser.id);
 		auth.setSessionTokenCookie(event, sessionToken, session.expiresAt);
 
+		// Check if password change is required
+		if (existingUser.requirePasswordChange) {
+			return redirect(302, '/panel/profile/password?required=true');
+		}
+
 		return redirect(302, '/panel');
 	}
 };

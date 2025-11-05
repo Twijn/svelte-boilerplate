@@ -47,7 +47,7 @@ export async function generateQRCode(uri: string): Promise<string> {
 /**
  * Verify a TOTP token against a secret
  */
-export function verifyTOTP(token: string, secret: string): boolean {
+export function verifyTOTP(token: string, secret: string, window: number = 2): boolean {
 	try {
 		const totp = new TOTP({
 			issuer: APP_NAME,
@@ -57,10 +57,11 @@ export function verifyTOTP(token: string, secret: string): boolean {
 			secret: Secret.fromBase32(secret)
 		});
 
-		// Validate the token with a window of ±1 period (30 seconds)
+		// Validate the token with a configurable window (default ±2 periods = ±60 seconds)
+		// This helps account for clock drift between server and client
 		const delta = totp.validate({
 			token,
-			window: 1
+			window
 		});
 
 		return delta !== null;

@@ -25,6 +25,11 @@ export const user = pgTable('user', {
 	lockedUntil: timestamp('locked_until', { withTimezone: true, mode: 'date' }),
 	failedLoginAttempts: text('failed_login_attempts').notNull().default('0'),
 	lastFailedLogin: timestamp('last_failed_login', { withTimezone: true, mode: 'date' }),
+	requirePasswordChange: boolean('require_password_change').notNull().default(false),
+
+	// Email verification
+	emailVerified: boolean('email_verified').notNull().default(false),
+	emailVerifiedAt: timestamp('email_verified_at', { withTimezone: true, mode: 'date' }),
 
 	// Timestamps
 	createdAt: timestamp('created_at', { withTimezone: true, mode: 'date' }).notNull().defaultNow(),
@@ -35,7 +40,7 @@ export const session = pgTable('session', {
 	id: text('id').primaryKey(),
 	userId: text('user_id')
 		.notNull()
-		.references(() => user.id),
+		.references(() => user.id, { onDelete: 'cascade' }),
 	expiresAt: timestamp('expires_at', { withTimezone: true, mode: 'date' }).notNull()
 });
 
@@ -60,7 +65,7 @@ export const userRole = pgTable('user_role', {
 		.notNull()
 		.references(() => role.id, { onDelete: 'cascade' }),
 	assignedAt: timestamp('assigned_at', { withTimezone: true, mode: 'date' }).notNull().defaultNow(),
-	assignedBy: text('assigned_by').references(() => user.id)
+	assignedBy: text('assigned_by').references(() => user.id, { onDelete: 'set null' })
 });
 
 // Future-proof: Node-based permissions for granular control
@@ -83,7 +88,7 @@ export const userNodePermission = pgTable('user_node_permission', {
 		.references(() => permissionNode.id, { onDelete: 'cascade' }),
 	permissions: json('permissions').$type<string[]>().notNull().default([]), // e.g., ['read', 'write', 'delete']
 	grantedAt: timestamp('granted_at', { withTimezone: true, mode: 'date' }).notNull().defaultNow(),
-	grantedBy: text('granted_by').references(() => user.id),
+	grantedBy: text('granted_by').references(() => user.id, { onDelete: 'set null' }),
 	expiresAt: timestamp('expires_at', { withTimezone: true, mode: 'date' }) // Optional expiration
 });
 
@@ -105,6 +110,17 @@ export const emailChangeToken = pgTable('email_change_token', {
 		.notNull()
 		.references(() => user.id, { onDelete: 'cascade' }),
 	newEmail: text('new_email').notNull(),
+	tokenHash: text('token_hash').notNull(),
+	expiresAt: timestamp('expires_at', { withTimezone: true, mode: 'date' }).notNull(),
+	createdAt: timestamp('created_at', { withTimezone: true, mode: 'date' }).notNull().defaultNow()
+});
+
+// Email verification tokens
+export const emailVerificationToken = pgTable('email_verification_token', {
+	id: text('id').primaryKey(),
+	userId: text('user_id')
+		.notNull()
+		.references(() => user.id, { onDelete: 'cascade' }),
 	tokenHash: text('token_hash').notNull(),
 	expiresAt: timestamp('expires_at', { withTimezone: true, mode: 'date' }).notNull(),
 	createdAt: timestamp('created_at', { withTimezone: true, mode: 'date' }).notNull().defaultNow()
@@ -147,4 +163,5 @@ export type PermissionNode = typeof permissionNode.$inferSelect;
 export type UserNodePermission = typeof userNodePermission.$inferSelect;
 export type PasswordResetToken = typeof passwordResetToken.$inferSelect;
 export type EmailChangeToken = typeof emailChangeToken.$inferSelect;
+export type EmailVerificationToken = typeof emailVerificationToken.$inferSelect;
 export type ActivityLog = typeof activityLog.$inferSelect;

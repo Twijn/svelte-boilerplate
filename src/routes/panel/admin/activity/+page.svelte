@@ -215,6 +215,14 @@
 			filterForm.dateFrom ||
 			filterForm.dateTo
 	);
+
+	function abbreviateNumber(num: number): string {
+		if (num < 1000) return num.toString();
+		if (num < 10000) return (num / 1000).toFixed(1) + 'K';
+		if (num < 1000000) return Math.floor(num / 1000) + 'K';
+		if (num < 10000000) return (num / 1000000).toFixed(1) + 'M';
+		return Math.floor(num / 1000000) + 'M';
+	}
 </script>
 
 <svelte:head>
@@ -241,7 +249,7 @@
 <div class="col-3 col-md-6 col-sm-12">
 	<StatCard
 		icon={faListOl}
-		value={data.pagination.total.toLocaleString()}
+		value={abbreviateNumber(data.pagination.total)}
 		label="Total Logs"
 		color="blue"
 	/>
@@ -261,7 +269,7 @@
 <div class="col-3 col-md-6 col-sm-12">
 	<StatCard
 		icon={faExclamationTriangle}
-		value={data.stats.failed.toLocaleString()}
+		value={abbreviateNumber(data.stats.failed)}
 		label="Failed Actions"
 		color="red"
 	/>

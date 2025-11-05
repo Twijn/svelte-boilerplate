@@ -12,31 +12,55 @@ export const actions: Actions = {
 			return fail(401, { message: 'Unauthorized', success: false });
 		}
 
-		// Delete avatar file if it exists
-		if (locals.user.avatar) {
-			await deleteUploadedFile(locals.user.avatar);
+		try {
+			// Delete avatar file if it exists
+			if (locals.user.avatar) {
+				await deleteUploadedFile(locals.user.avatar);
+			}
+
+			// Delete in the correct order to handle foreign key constraints
+			// 1. Delete sessions (no cascade)
+			await db.delete(table.session).where(eq(table.session.userId, locals.user.id));
+
+			// 2. Delete password reset tokens (has cascade but just to be safe)
+			await db
+				.delete(table.passwordResetToken)
+				.where(eq(table.passwordResetToken.userId, locals.user.id));
+
+			// 3. Delete email change tokens (has cascade but just to be safe)
+			await db
+				.delete(table.emailChangeToken)
+				.where(eq(table.emailChangeToken.userId, locals.user.id));
+
+			// 4. Delete user roles (has cascade, but assignedBy field doesn't have onDelete set)
+			await db.delete(table.userRole).where(eq(table.userRole.userId, locals.user.id));
+
+			// 5. Delete user node permissions (has cascade)
+			await db
+				.delete(table.userNodePermission)
+				.where(eq(table.userNodePermission.userId, locals.user.id));
+
+			// 6. Log activity before final deletion (will be set to null when user is deleted)
+			await ActivityLogService.log({
+				userId: locals.user.id,
+				action: 'user.account.delete',
+				category: ActivityCategory.USER,
+				message: 'User deleted their account',
+				resourceType: 'user',
+				resourceId: locals.user.id
+			});
+
+			// 7. Finally, delete the user (this will set activityLog.userId to null due to onDelete: 'set null')
+			await db.delete(table.user).where(eq(table.user.id, locals.user.id));
+		} catch (error) {
+			console.error('Error deleting account:', error);
+			return fail(500, {
+				message: 'Failed to delete account. Please try again or contact support.',
+				success: false
+			});
 		}
 
-		// Log activity before deletion
-		await ActivityLogService.log({
-			userId: locals.user.id,
-			action: 'user.account.delete',
-			category: ActivityCategory.USER,
-			message: 'User deleted their account',
-			resourceType: 'user',
-			resourceId: locals.user.id
-		});
-
-		// Delete user's roles first
-		await db.delete(table.userRole).where(eq(table.userRole.userId, locals.user.id));
-
-		// Delete user's sessions
-		await db.delete(table.session).where(eq(table.session.userId, locals.user.id));
-
-		// Delete user
-		await db.delete(table.user).where(eq(table.user.id, locals.user.id));
-
-		// Redirect to home page after deletion
+		// Redirect to home page after successful deletion
 		throw redirect(302, '/');
 	}
 };

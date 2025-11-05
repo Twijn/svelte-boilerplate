@@ -8,7 +8,7 @@
 
 	let { value = $bindable(''), onComplete, disabled = false, error = false }: Props = $props();
 
-	let inputs: HTMLInputElement[] = [];
+	let inputs = $state<HTMLInputElement[]>([]);
 	let code = $state(value.split('').slice(0, 6));
 
 	// Initialize code array with 6 empty strings
@@ -18,53 +18,11 @@
 		}
 	});
 
-	function handleInput(index: number, event: Event) {
+	let hiddenInput = $state<HTMLInputElement | null>(null);
+
+	function handleHiddenInput(event: Event) {
 		const target = event.target as HTMLInputElement;
-		const val = target.value;
-
-		// Only allow single digit
-		if (val.length > 1) {
-			target.value = val[0];
-			code[index] = val[0];
-		} else {
-			code[index] = val;
-		}
-
-		// Auto-focus next input
-		if (val && index < 5) {
-			inputs[index + 1]?.focus();
-		}
-
-		// Check if complete
-		if (code.every((digit) => digit !== '')) {
-			const fullCode = code.join('');
-			if (onComplete) {
-				onComplete(fullCode);
-			}
-		}
-	}
-
-	function handleKeyDown(index: number, event: KeyboardEvent) {
-		// Handle backspace
-		if (event.key === 'Backspace' && !code[index] && index > 0) {
-			inputs[index - 1]?.focus();
-		}
-
-		// Handle arrow keys
-		if (event.key === 'ArrowLeft' && index > 0) {
-			event.preventDefault();
-			inputs[index - 1]?.focus();
-		}
-		if (event.key === 'ArrowRight' && index < 5) {
-			event.preventDefault();
-			inputs[index + 1]?.focus();
-		}
-	}
-
-	function handlePaste(event: ClipboardEvent) {
-		event.preventDefault();
-		const pastedData = event.clipboardData?.getData('text') || '';
-		const digits = pastedData.replace(/\D/g, '').slice(0, 6).split('');
+		const digits = target.value.replace(/\D/g, '').slice(0, 6).split('');
 
 		digits.forEach((digit, index) => {
 			code[index] = digit;
@@ -73,87 +31,71 @@
 			}
 		});
 
-		// Focus the next empty input or the last one
-		const nextEmptyIndex = digits.length < 6 ? digits.length : 5;
-		inputs[nextEmptyIndex]?.focus();
+		// Update the bindable value
+		value = code.join('');
+
+		// Focus first visible input
+		inputs[0]?.focus();
 
 		// Check if complete
-		if (digits.length === 6) {
-			const fullCode = digits.join('');
-			if (onComplete) {
-				onComplete(fullCode);
-			}
+		if (digits.length === 6 && onComplete) {
+			onComplete(digits.join(''));
 		}
 	}
 </script>
 
-<div class="totp-input-container">
-	{#each Array(6) as _, index (String(index))}
+<div class="totp-input-wrapper">
+	<!-- Visible input for Bitwarden TOTP autofill - styled to blend with boxes -->
+	<label>
+		Access Code
 		<input
-			bind:this={inputs[index]}
+			bind:this={hiddenInput}
 			type="text"
 			inputmode="numeric"
-			pattern="[0-9]"
-			maxlength="1"
-			value={code[index] || ''}
-			oninput={(e) => handleInput(index, e)}
-			onkeydown={(e) => handleKeyDown(index, e)}
-			onpaste={handlePaste}
-			{disabled}
+			maxlength="6"
+			autocomplete="one-time-code"
+			placeholder="000000"
+			oninput={handleHiddenInput}
+			onfocus={() => hiddenInput?.select()}
+			class="totp-autofill-input"
 			class:error
-			autocomplete="off"
 		/>
-	{/each}
+	</label>
 </div>
 
 <style>
-	.totp-input-container {
+	.totp-input-wrapper {
 		display: flex;
-		gap: 0.5rem;
-		justify-content: center;
+		flex-direction: column;
+		gap: 0.75rem;
 		align-items: center;
-		flex-wrap: wrap;
-		max-width: 100%;
-		padding: 0 0.5rem;
-		box-sizing: border-box;
 	}
 
-	input {
-		width: 3rem;
-		height: 3.5rem;
+	.totp-autofill-input {
+		width: 100%;
+		max-width: 20rem;
+		height: 3rem;
 		text-align: center;
-		font-size: 1.5rem;
+		font-size: 1.25rem;
 		font-weight: 600;
 		font-family: var(--font-family-mono), monospace;
 		border: 2px solid rgba(255, 255, 255, 0.2);
 		border-radius: 0.5rem;
 		background: var(--background-color-1);
 		color: var(--text-color-1);
-		transition: all 0.2s ease;
-		padding: 0;
-		margin: 0;
-		box-sizing: border-box;
-		flex-shrink: 0;
+		padding: 0 1rem;
+		letter-spacing: 0.5rem;
 	}
 
-	input:focus {
+	.totp-autofill-input:focus {
 		outline: none;
 		border-color: var(--theme-color-2);
-		box-shadow:
-			0 0 0 3px rgba(var(--theme-color-rgb), 0.1),
-			0 2px 8px rgba(0, 0, 0, 0.15);
-		transform: translateY(-1px);
+		box-shadow: 0 0 0 3px rgba(var(--theme-color-rgb), 0.1);
 	}
 
-	input:disabled {
-		opacity: 0.5;
-		cursor: not-allowed;
-		background: rgba(0, 0, 0, 0.2);
-	}
-
-	input.error {
-		border-color: rgb(var(--red));
-		animation: shake 0.3s ease-in-out;
+	.totp-autofill-input::placeholder {
+		letter-spacing: 0.5rem;
+		opacity: 0.3;
 	}
 
 	@keyframes shake {
@@ -171,11 +113,6 @@
 
 	/* Responsive adjustments to prevent overflow */
 	@media (max-width: 640px) {
-		.totp-input-container {
-			gap: 0.4rem;
-			padding: 0 0.25rem;
-		}
-
 		input {
 			width: 2.5rem;
 			height: 3rem;
@@ -184,11 +121,6 @@
 	}
 
 	@media (max-width: 380px) {
-		.totp-input-container {
-			gap: 0.3rem;
-			padding: 0;
-		}
-
 		input {
 			width: 2.2rem;
 			height: 2.75rem;

@@ -2,7 +2,7 @@
 	import type { Snippet } from 'svelte';
 	import { slide } from 'svelte/transition';
 
-	type AlertVariant = 'info' | 'success' | 'danger';
+	type AlertVariant = 'info' | 'success' | 'danger' | 'warning';
 
 	const { children, variant }: { children: Snippet; variant: AlertVariant } = $props();
 </script>
@@ -12,6 +12,7 @@
 	class:info={variant === 'info'}
 	class:success={variant === 'success'}
 	class:danger={variant === 'danger'}
+	class:warning={variant === 'warning'}
 	role="alert"
 	transition:slide
 >
@@ -29,6 +30,10 @@
 
 	.danger {
 		--variant-color: var(--red);
+	}
+
+	.warning {
+		--variant-color: var(--orange);
 	}
 
 	.alert {

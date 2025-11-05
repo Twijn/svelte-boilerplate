@@ -2,7 +2,7 @@
 	import Button from '$lib/components/ui/Button.svelte';
 	import Modal from '$lib/components/ui/Modal.svelte';
 	import ConfirmModal from '$lib/components/ui/ConfirmModal.svelte';
-	import UserCard from '$lib/components/admin/UserCard.svelte';
+	import UserTable from '$lib/components/admin/UserTable.svelte';
 	import StatCard from '$lib/components/ui/StatCard.svelte';
 	import { enhance } from '$app/forms';
 	import { notifications } from '$lib/stores/notifications';
@@ -21,6 +21,7 @@
 		lastName: string;
 		username: string;
 		email: string;
+		requirePasswordChange: boolean;
 		roles: Array<{ id: string; name: string; isSystemRole: boolean }>;
 	};
 
@@ -49,14 +50,16 @@
 		email: '',
 		firstName: '',
 		lastName: '',
-		password: ''
+		password: '',
+		requirePasswordChange: false
 	});
 
 	let editForm = $state({
 		username: '',
 		email: '',
 		firstName: '',
-		lastName: ''
+		lastName: '',
+		requirePasswordChange: false
 	});
 
 	// Modal handlers
@@ -66,7 +69,8 @@
 			email: '',
 			firstName: '',
 			lastName: '',
-			password: ''
+			password: '',
+			requirePasswordChange: false
 		};
 		showCreateModal = true;
 	}
@@ -77,7 +81,8 @@
 			username: user.username,
 			email: user.email,
 			firstName: user.firstName,
-			lastName: user.lastName
+			lastName: user.lastName,
+			requirePasswordChange: user.requirePasswordChange
 		};
 		showEditModal = true;
 	}
@@ -175,18 +180,16 @@
 	/>
 </div>
 
-{#each data.users as user (user.id)}
-	<UserCard
-		{user}
-		availableRolesCount={getAvailableRoles(user).length}
-		onAssignRole={() => openAssignModal(user)}
-		onRemoveRole={(role) => openRemoveModal(user, role)}
-		onEdit={() => openEditModal(user)}
-		onDelete={() => openDeleteModal(user)}
-		onUnlock={user.isLocked ? () => openUnlockModal(user) : undefined}
-		{canRemoveRole}
-	/>
-{/each}
+<UserTable
+	users={data.users}
+	availableRolesForUser={(user) => getAvailableRoles(user).length}
+	onAssignRole={(user) => openAssignModal(user)}
+	onRemoveRole={(user, role) => openRemoveModal(user, role)}
+	onEdit={(user) => openEditModal(user)}
+	onDelete={(user) => openDeleteModal(user)}
+	onUnlock={(user) => openUnlockModal(user)}
+	{canRemoveRole}
+/>
 
 <!-- Modals -->
 <Modal
@@ -341,6 +344,19 @@
 			/>
 		</div>
 
+		<div class="form-group checkbox-group">
+			<label>
+				<input
+					type="checkbox"
+					name="requirePasswordChange"
+					value="true"
+					bind:checked={createForm.requirePasswordChange}
+				/>
+				Require password change on next login
+			</label>
+			<small>User will be prompted to change their password when they first log in</small>
+		</div>
+
 		<div class="modal-actions">
 			<Button type="button" variant="secondary" onClick={closeModals}>Cancel</Button>
 			<Button type="submit" variant="primary">Create User</Button>
@@ -417,6 +433,19 @@
 					required
 					placeholder="e.g., Doe"
 				/>
+			</div>
+
+			<div class="form-group checkbox-group">
+				<label>
+					<input
+						type="checkbox"
+						name="requirePasswordChange"
+						value="true"
+						bind:checked={editForm.requirePasswordChange}
+					/>
+					Require password change on next login
+				</label>
+				<small>User will be prompted to change their password when they next log in</small>
 			</div>
 
 			<div class="modal-actions">
@@ -542,6 +571,34 @@
 		outline: none;
 		border-color: var(--theme-color-2);
 		box-shadow: 0 0 0 2px rgba(var(--theme-color-rgb), 0.2);
+	}
+
+	.checkbox-group {
+		padding: 1rem;
+		background: rgba(var(--theme-color-rgb), 0.05);
+		border-radius: 0.5rem;
+		border: 1px solid rgba(var(--theme-color-rgb), 0.2);
+	}
+
+	.checkbox-group label {
+		display: flex;
+		align-items: center;
+		gap: 0.5rem;
+		cursor: pointer;
+		margin-bottom: 0.25rem;
+	}
+
+	.checkbox-group input[type='checkbox'] {
+		width: auto;
+		cursor: pointer;
+	}
+
+	.checkbox-group small {
+		display: block;
+		color: var(--text-color-2);
+		font-size: 0.875rem;
+		margin-top: 0.25rem;
+		margin-left: 1.5rem;
 	}
 
 	.modal-actions {

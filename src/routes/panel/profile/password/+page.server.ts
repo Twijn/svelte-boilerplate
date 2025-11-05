@@ -1,11 +1,19 @@
 import { fail } from '@sveltejs/kit';
-import type { Actions } from './$types';
+import type { Actions, PageServerLoad } from './$types';
 import { db } from '$lib/server/db';
 import * as table from '$lib/server/db/schema';
 import { eq } from 'drizzle-orm';
 import { verify, hash } from '@node-rs/argon2';
 import { validatePassword, invalidateUserSessions } from '$lib/server/auth';
 import { ActivityLogService, ActivityCategory, ActivityActions } from '$lib/server/activity-log';
+
+export const load: PageServerLoad = async ({ locals, url }) => {
+	const required = url.searchParams.get('required') === 'true';
+	return {
+		required,
+		user: locals.user
+	};
+};
 
 export const actions: Actions = {
 	changePassword: async ({ request, locals }) => {
@@ -65,11 +73,12 @@ export const actions: Actions = {
 			// Hash new password
 			const newPasswordHash = await hash(newPassword);
 
-			// Update password
+			// Update password and clear requirePasswordChange flag
 			await db
 				.update(table.user)
 				.set({
 					passwordHash: newPasswordHash,
+					requirePasswordChange: false,
 					updatedAt: new Date()
 				})
 				.where(eq(table.user.id, locals.user.id));

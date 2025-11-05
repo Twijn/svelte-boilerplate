@@ -5,6 +5,8 @@
 	import { notifications } from '$lib/stores/notifications';
 	import { enhance } from '$app/forms';
 	import { invalidateAll, goto } from '$app/navigation';
+	import { FontAwesomeIcon } from '@fortawesome/svelte-fontawesome';
+	import { faCheck } from '@fortawesome/free-solid-svg-icons';
 
 	const { data, form } = $props();
 
@@ -72,6 +74,7 @@
 					<TotpInput bind:value={totpCode} />
 				</label>
 
+				<input type="hidden" name="totpCode" value={totpCode} />
 				<input type="hidden" name="backupCodes" value={JSON.stringify(data.backupCodes)} />
 
 				<Button type="submit">Verify & Enable</Button>
@@ -95,7 +98,7 @@
 		</div>
 	{:else if data.user?.twoFactorEnabled}
 		<!-- Enabled - show disable -->
-		<p class="success-msg">✓ Your account is protected with 2FA</p>
+		<p class="success-msg"><FontAwesomeIcon icon={faCheck} /> Your account is protected with 2FA</p>
 
 		<form method="POST" action="?/disable2FA" use:enhance>
 			<label>

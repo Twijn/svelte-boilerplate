@@ -35,7 +35,8 @@ export const load = async ({ locals }) => {
 			lockedAt: table.user.lockedAt,
 			lockedUntil: table.user.lockedUntil,
 			failedLoginAttempts: table.user.failedLoginAttempts,
-			lastFailedLogin: table.user.lastFailedLogin
+			lastFailedLogin: table.user.lastFailedLogin,
+			requirePasswordChange: table.user.requirePasswordChange
 		})
 		.from(table.user);
 
@@ -199,6 +200,7 @@ export const actions = {
 		const firstName = formData.get('firstName') as string;
 		const lastName = formData.get('lastName') as string;
 		const password = formData.get('password') as string;
+		const requirePasswordChange = formData.get('requirePasswordChange') === 'true';
 
 		// Validate inputs
 		if (!validateUsername(username)) {
@@ -270,7 +272,8 @@ export const actions = {
 				email,
 				firstName,
 				lastName,
-				passwordHash
+				passwordHash,
+				requirePasswordChange
 			});
 
 			// Log user creation
@@ -319,6 +322,7 @@ export const actions = {
 		const email = formData.get('email') as string;
 		const firstName = formData.get('firstName') as string;
 		const lastName = formData.get('lastName') as string;
+		const requirePasswordChange = formData.get('requirePasswordChange') === 'true';
 
 		if (!userId) {
 			return fail(400, { message: 'User ID is required' });
@@ -391,7 +395,8 @@ export const actions = {
 					username,
 					email,
 					firstName,
-					lastName
+					lastName,
+					requirePasswordChange
 				})
 				.where(eq(table.user.id, userId));
 

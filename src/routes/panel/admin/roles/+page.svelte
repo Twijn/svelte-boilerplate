@@ -2,7 +2,7 @@
 	import Button from '$lib/components/ui/Button.svelte';
 	import Modal from '$lib/components/ui/Modal.svelte';
 	import ConfirmModal from '$lib/components/ui/ConfirmModal.svelte';
-	import RoleCard from '$lib/components/admin/RoleCard.svelte';
+	import RoleTable from '$lib/components/admin/RoleTable.svelte';
 	import PermissionSelector from '$lib/components/ui/PermissionSelector.svelte';
 	import StatCard from '$lib/components/ui/StatCard.svelte';
 	import { enhance } from '$app/forms';
@@ -134,11 +134,11 @@
 	/>
 </div>
 
-{#each data.roles as role (role.id)}
-	<div class="col-4 col-md-6 col-sm-12">
-		<RoleCard {role} onEdit={() => openEditModal(role)} onDelete={() => openDeleteModal(role)} />
-	</div>
-{/each}
+<RoleTable
+	roles={data.roles}
+	onEdit={(role) => openEditModal(role)}
+	onDelete={(role) => openDeleteModal(role)}
+/>
 
 <!-- Create Role Modal -->
 <Modal bind:isOpen={showCreateModal} onClose={closeModals} title="Create New Role" size="large">
