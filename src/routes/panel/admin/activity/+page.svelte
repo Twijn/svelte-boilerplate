@@ -22,6 +22,7 @@
 	import Button from '$lib/components/ui/Button.svelte';
 	import { APP_NAME } from '$lib/consts';
 	import { SvelteURLSearchParams } from 'svelte/reactivity';
+	import Pagination from '$lib/components/ui/Pagination.svelte';
 
 	const { data } = $props();
 
@@ -246,43 +247,37 @@
 />
 
 <!-- Stats Cards -->
-<div class="col-3 col-md-6 col-sm-12">
-	<StatCard
-		icon={faListOl}
-		value={abbreviateNumber(data.pagination.total)}
-		label="Total Logs"
-		color="blue"
-	/>
-</div>
+<StatCard
+	icon={faListOl}
+	value={abbreviateNumber(data.pagination.total)}
+	label="Total Logs"
+	color="blue"
+	columns={3}
+/>
 
-<div class="col-3 col-md-6 col-sm-12">
-	<StatCard
-		icon={faPercent}
-		value="{data.stats.total > 0
-			? Math.round((data.stats.successful / data.stats.total) * 100)
-			: 0}%"
-		label="Success Rate"
-		color="green"
-	/>
-</div>
+<StatCard
+	icon={faPercent}
+	value="{data.stats.total > 0 ? Math.round((data.stats.successful / data.stats.total) * 100) : 0}%"
+	label="Success Rate"
+	color="green"
+	columns={3}
+/>
 
-<div class="col-3 col-md-6 col-sm-12">
-	<StatCard
-		icon={faExclamationTriangle}
-		value={abbreviateNumber(data.stats.failed)}
-		label="Failed Actions"
-		color="red"
-	/>
-</div>
+<StatCard
+	icon={faExclamationTriangle}
+	value={abbreviateNumber(data.stats.failed)}
+	label="Failed Actions"
+	color="red"
+	columns={3}
+/>
 
-<div class="col-3 col-md-6 col-sm-12">
-	<StatCard
-		icon={faFileAlt}
-		value="{data.pagination.page} / {data.pagination.totalPages}"
-		label="Page"
-		color="purple"
-	/>
-</div>
+<StatCard
+	icon={faFileAlt}
+	value="{data.pagination.page} / {data.pagination.totalPages}"
+	label="Page"
+	color="purple"
+	columns={3}
+/>
 
 <!-- Filter Toggle -->
 <div class="col-12 filter-toggle">
@@ -447,37 +442,11 @@
 
 <!-- Pagination -->
 {#if data.pagination.totalPages > 1}
-	<div class="pagination">
-		<Button
-			onClick={() => changePage(data.pagination.page - 1)}
-			disabled={data.pagination.page === 1}
-		>
-			<FontAwesomeIcon icon={faChevronLeft} />
-			Previous
-		</Button>
-
-		<div class="page-numbers">
-			{#each Array.from({ length: Math.min(5, data.pagination.totalPages) }, (_, i) => {
-				const startPage = Math.max(1, Math.min(data.pagination.page - 2, data.pagination.totalPages - 4));
-				return startPage + i;
-			}) as pageNum (pageNum)}
-				<button
-					class="page-number {pageNum === data.pagination.page ? 'active' : ''}"
-					onclick={() => changePage(pageNum)}
-				>
-					{pageNum}
-				</button>
-			{/each}
-		</div>
-
-		<Button
-			onClick={() => changePage(data.pagination.page + 1)}
-			disabled={data.pagination.page === data.pagination.totalPages}
-		>
-			Next
-			<FontAwesomeIcon icon={faChevronRight} />
-		</Button>
-	</div>
+	<Pagination
+		currentPage={data.pagination.page}
+		totalPages={data.pagination.totalPages}
+		{changePage}
+	/>
 {/if}
 
 <style>
@@ -640,41 +609,6 @@
 		border: 1px solid rgba(255, 59, 48, 0.3);
 	}
 
-	/* Pagination */
-	.pagination {
-		display: flex;
-		justify-content: center;
-		align-items: center;
-		gap: 1rem;
-	}
-
-	.page-numbers {
-		display: flex;
-		gap: 0.5rem;
-	}
-
-	.page-number {
-		padding: 0.5rem 0.75rem;
-		background: var(--background-color-2);
-		border: 1px solid rgba(255, 255, 255, 0.1);
-		border-radius: 0.5rem;
-		color: var(--text-color-2);
-		font-size: 0.9rem;
-		cursor: pointer;
-		transition: all 0.2s ease;
-	}
-
-	.page-number:hover {
-		background: var(--background-color-1);
-		border-color: rgba(255, 255, 255, 0.2);
-	}
-
-	.page-number.active {
-		background: var(--theme-color-2);
-		color: white;
-		border-color: var(--theme-color-2);
-	}
-
 	.empty-state {
 		display: flex;
 		flex-direction: column;
@@ -689,11 +623,5 @@
 	.empty-state p {
 		margin: 0;
 		font-size: 1.1rem;
-	}
-
-	@media (max-width: 768px) {
-		.pagination {
-			flex-direction: column;
-		}
 	}
 </style>

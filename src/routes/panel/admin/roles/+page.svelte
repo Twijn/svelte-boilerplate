@@ -108,31 +108,37 @@
 />
 
 <!-- Stats Cards -->
-<div class="col-3 col-md-6 col-sm-12">
-	<StatCard icon={faShield} value={data.stats.totalRoles} label="Total Roles" color="blue" />
-</div>
+<StatCard
+	icon={faShield}
+	value={data.stats.totalRoles}
+	label="Total Roles"
+	color="blue"
+	columns={3}
+/>
 
-<div class="col-3 col-md-6 col-sm-12">
-	<StatCard icon={faCog} value={data.stats.systemRoles} label="System Roles" color="orange" />
-</div>
+<StatCard
+	icon={faCog}
+	value={data.stats.systemRoles}
+	label="System Roles"
+	color="orange"
+	columns={3}
+/>
 
-<div class="col-3 col-md-6 col-sm-12">
-	<StatCard
-		icon={faLayerGroup}
-		value={data.stats.customRoles}
-		label="Custom Roles"
-		color="purple"
-	/>
-</div>
+<StatCard
+	icon={faLayerGroup}
+	value={data.stats.customRoles}
+	label="Custom Roles"
+	color="purple"
+	columns={3}
+/>
 
-<div class="col-3 col-md-6 col-sm-12">
-	<StatCard
-		icon={faUserTag}
-		value={data.stats.totalAssignments}
-		label="Total Assignments"
-		color="green"
-	/>
-</div>
+<StatCard
+	icon={faUserTag}
+	value={data.stats.totalAssignments}
+	label="Total Assignments"
+	color="green"
+	columns={3}
+/>
 
 <RoleTable
 	roles={data.roles}

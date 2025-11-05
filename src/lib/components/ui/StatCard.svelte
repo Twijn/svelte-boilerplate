@@ -2,15 +2,18 @@
 	import { FontAwesomeIcon } from '@fortawesome/svelte-fontawesome';
 	import type { IconDefinition } from '@fortawesome/free-solid-svg-icons';
 
+	type ColumnCount = 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 10 | 11 | 12;
+
 	interface Props {
 		icon: IconDefinition;
 		value: string | number;
 		label: string;
 		color?: 'blue' | 'red' | 'green' | 'orange' | 'purple' | 'yellow';
 		href?: string;
+		columns?: ColumnCount;
 	}
 
-	let { icon, value, label, color = 'blue', href }: Props = $props();
+	let { icon, value, label, color = 'blue', href, columns = 3 }: Props = $props();
 
 	function getColorClass(color: string) {
 		switch (color) {
@@ -33,7 +36,7 @@
 </script>
 
 {#if href}
-	<a {href} class="stat-card">
+	<a {href} class="stat-card col-{columns} col-sm-12" class:col-md-6={columns < 6}>
 		<div class="stat-icon {getColorClass(color)}">
 			<FontAwesomeIcon {icon} size="2x" />
 		</div>
@@ -43,7 +46,7 @@
 		</div>
 	</a>
 {:else}
-	<div class="stat-card">
+	<div class="stat-card col-{columns} col-sm-12" class:col-md-6={columns < 6}>
 		<div class="stat-icon {getColorClass(color)}">
 			<FontAwesomeIcon {icon} size="2x" />
 		</div>

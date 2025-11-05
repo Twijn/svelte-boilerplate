@@ -154,31 +154,37 @@
 />
 
 <!-- Stats Cards -->
-<div class="col-3 col-md-6 col-sm-12">
-	<StatCard icon={faUsers} value={data.stats.totalUsers} label="Total Users" color="blue" />
-</div>
+<StatCard
+	icon={faUsers}
+	value={data.stats.totalUsers}
+	label="Total Users"
+	color="blue"
+	columns={3}
+/>
 
-<div class="col-3 col-md-6 col-sm-12">
-	<StatCard
-		icon={faCheckCircle}
-		value={data.stats.activeUsers}
-		label="Active Users"
-		color="green"
-	/>
-</div>
+<StatCard
+	icon={faCheckCircle}
+	value={data.stats.activeUsers}
+	label="Active Users"
+	color="green"
+	columns={3}
+/>
 
-<div class="col-3 col-md-6 col-sm-12">
-	<StatCard icon={faLock} value={data.stats.lockedUsers} label="Locked Accounts" color="red" />
-</div>
+<StatCard
+	icon={faLock}
+	value={data.stats.lockedUsers}
+	label="Locked Accounts"
+	color="red"
+	columns={3}
+/>
 
-<div class="col-3 col-md-6 col-sm-12">
-	<StatCard
-		icon={faExclamationTriangle}
-		value={data.stats.usersWithFailedLogins}
-		label="Failed Login Attempts"
-		color="orange"
-	/>
-</div>
+<StatCard
+	icon={faExclamationTriangle}
+	value={data.stats.usersWithFailedLogins}
+	label="Failed Login Attempts"
+	color="orange"
+	columns={3}
+/>
 
 <UserTable
 	users={data.users}
