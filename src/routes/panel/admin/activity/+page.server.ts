@@ -2,6 +2,7 @@ import {
 	ActivityLogService,
 	ActivityCategory,
 	LogSeverity,
+	ActivityActions,
 	type QueryActivityOptions
 } from '$lib/server/activity-log';
 import { requireAdmin } from '$lib/server/permission-middleware';
@@ -70,6 +71,12 @@ export const load: PageServerLoad = async ({ locals, url }) => {
 			dateFrom,
 			dateTo
 		},
-		stats
+		stats,
+		// Export filter options for client use
+		filterOptions: {
+			categories: Object.values(ActivityCategory),
+			severities: Object.values(LogSeverity),
+			actions: Object.values(ActivityActions)
+		}
 	};
 };

@@ -7,8 +7,6 @@
 	import {
 		faHistory,
 		faFilter,
-		faChevronLeft,
-		faChevronRight,
 		faSearch,
 		faTimes,
 		faCheckCircle,
@@ -36,43 +34,6 @@
 		dateFrom: data.filters.dateFrom || '',
 		dateTo: data.filters.dateTo || ''
 	});
-
-	const categories = [
-		'authentication',
-		'authorization',
-		'user_management',
-		'security',
-		'system',
-		'data',
-		'api',
-		'other'
-	];
-	const severities = ['critical', 'high', 'medium', 'low', 'info'];
-	const actions = [
-		'user.login.success',
-		'user.login.failed',
-		'user.register.success',
-		'user.register.failed',
-		'user.logout',
-		'user.created',
-		'user.updated',
-		'user.deleted',
-		'role.created',
-		'role.updated',
-		'role.deleted',
-		'role.assigned',
-		'role.removed',
-		'permission.granted',
-		'permission.revoked',
-		'session.created',
-		'session.expired',
-		'password.changed',
-		'password.reset.requested',
-		'password.reset.completed',
-		'account.locked',
-		'account.unlocked',
-		'rate_limit.exceeded'
-	];
 
 	function applyFilters() {
 		const params = new SvelteURLSearchParams();
@@ -314,7 +275,7 @@
 				<label for="action">Action</label>
 				<select id="action" bind:value={filterForm.action}>
 					<option value="">All Actions</option>
-					{#each actions as action (action)}
+					{#each data.filterOptions.actions as action (action)}
 						<option value={action}>{action}</option>
 					{/each}
 				</select>
@@ -324,7 +285,7 @@
 				<label for="category">Category</label>
 				<select id="category" bind:value={filterForm.category}>
 					<option value="">All Categories</option>
-					{#each categories as category (category)}
+					{#each data.filterOptions.categories as category (category)}
 						<option value={category}>{category}</option>
 					{/each}
 				</select>
@@ -334,7 +295,7 @@
 				<label for="severity">Severity</label>
 				<select id="severity" bind:value={filterForm.severity}>
 					<option value="">All Severities</option>
-					{#each severities as severity (severity)}
+					{#each data.filterOptions.severities as severity (severity)}
 						<option value={severity}>{severity}</option>
 					{/each}
 				</select>

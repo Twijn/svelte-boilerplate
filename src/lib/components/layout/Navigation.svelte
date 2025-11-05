@@ -95,7 +95,7 @@
 					}
 
 					// Check if user has any of the required permissions
-					return link.requiredPermissions.every((permission) =>
+					return link.requiredPermissions.some((permission) =>
 						userPermissions.includes(permission)
 					);
 				})
