@@ -36,6 +36,12 @@
 			name: 'Dashboard',
 			links: [
 				{
+					icon: faShieldAlt,
+					name: 'Admin Dashboard',
+					href: '/panel/admin',
+					requiredPermissions: [PERMISSIONS.ADMIN]
+				},
+				{
 					icon: faHome,
 					name: 'Dashboard',
 					href: '/panel'
@@ -51,12 +57,6 @@
 		{
 			name: 'Administration',
 			links: [
-				{
-					icon: faShieldAlt,
-					name: 'Admin Dashboard',
-					href: '/panel/admin',
-					requiredPermissions: [PERMISSIONS.ADMIN]
-				},
 				{
 					icon: faTimeline,
 					name: 'Activity Logs',
