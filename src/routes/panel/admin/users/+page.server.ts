@@ -1,4 +1,4 @@
-import { requireAdmin } from '$lib/server/permission-middleware';
+import { requireUserManagement } from '$lib/server/permission-middleware';
 import { PermissionService } from '$lib/server/permissions';
 import { db } from '$lib/server/db';
 import * as table from '$lib/server/db/schema';
@@ -21,7 +21,7 @@ import {
 
 export const load = async ({ locals }) => {
 	// Check if user has admin permission
-	await requireAdmin(locals.user?.id || null);
+	await requireUserManagement(locals.user?.id || null);
 
 	// Get all users with their roles
 	const users = await db
@@ -79,7 +79,7 @@ export const load = async ({ locals }) => {
 
 export const actions = {
 	assignRole: async ({ request, locals }) => {
-		await requireAdmin(locals.user?.id || null);
+		await requireUserManagement(locals.user?.id || null);
 
 		const formData = await request.formData();
 		const userId = formData.get('userId') as string;
@@ -143,7 +143,7 @@ export const actions = {
 	},
 
 	removeRole: async ({ request, locals }) => {
-		await requireAdmin(locals.user?.id || null);
+		await requireUserManagement(locals.user?.id || null);
 
 		const formData = await request.formData();
 		const userId = formData.get('userId') as string;
@@ -196,7 +196,7 @@ export const actions = {
 	},
 
 	createUser: async ({ request, locals }) => {
-		await requireAdmin(locals.user?.id || null);
+		await requireUserManagement(locals.user?.id || null);
 
 		const formData = await request.formData();
 		const username = formData.get('username') as string;
@@ -318,7 +318,7 @@ export const actions = {
 	},
 
 	updateUser: async ({ request, locals }) => {
-		await requireAdmin(locals.user?.id || null);
+		await requireUserManagement(locals.user?.id || null);
 
 		const formData = await request.formData();
 		const userId = formData.get('userId') as string;
@@ -444,7 +444,7 @@ export const actions = {
 	},
 
 	deleteUser: async ({ request, locals }) => {
-		await requireAdmin(locals.user?.id || null);
+		await requireUserManagement(locals.user?.id || null);
 
 		const formData = await request.formData();
 		const userId = formData.get('userId') as string;
@@ -522,7 +522,7 @@ export const actions = {
 	},
 
 	unlockUser: async ({ request, locals }) => {
-		await requireAdmin(locals.user?.id || null);
+		await requireUserManagement(locals.user?.id || null);
 
 		const formData = await request.formData();
 		const userId = formData.get('userId') as string;
@@ -594,7 +594,7 @@ export const actions = {
 	},
 
 	disableUser: async ({ request, locals }) => {
-		await requireAdmin(locals.user?.id || null);
+		await requireUserManagement(locals.user?.id || null);
 
 		const formData = await request.formData();
 		const userId = formData.get('userId') as string;
@@ -674,7 +674,7 @@ export const actions = {
 	},
 
 	enableUser: async ({ request, locals }) => {
-		await requireAdmin(locals.user?.id || null);
+		await requireUserManagement(locals.user?.id || null);
 
 		const formData = await request.formData();
 		const userId = formData.get('userId') as string;

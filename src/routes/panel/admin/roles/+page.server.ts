@@ -1,4 +1,4 @@
-import { requireAdmin } from '$lib/server/permission-middleware';
+import { requireAdmin, requireRoleManagement } from '$lib/server/permission-middleware';
 import { PermissionService } from '$lib/server/permissions';
 import { db } from '$lib/server/db';
 import * as table from '$lib/server/db/schema';
@@ -15,7 +15,7 @@ import { getAllPermissions } from '$lib/constants/permissions';
 
 export const load = async ({ locals }) => {
 	// Check if user has admin permission
-	await requireAdmin(locals.user?.id || null);
+	await requireRoleManagement(locals.user?.id || null);
 
 	// Get all roles with user counts
 	const roles = await db.select().from(table.role);

@@ -5,11 +5,11 @@ import {
 	ActivityActions,
 	type QueryActivityOptions
 } from '$lib/server/activity-log';
-import { requireAdmin } from '$lib/server/permission-middleware';
+import { requireViewLogs } from '$lib/server/permission-middleware';
 import type { PageServerLoad } from './$types';
 
 export const load: PageServerLoad = async ({ locals, url }) => {
-	await requireAdmin(locals.user?.id || null);
+	await requireViewLogs(locals.user?.id || null);
 
 	// Pagination
 	const page = parseInt(url.searchParams.get('page') || '1');

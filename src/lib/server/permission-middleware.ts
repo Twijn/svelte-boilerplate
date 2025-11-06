@@ -49,6 +49,16 @@ export const requireAdmin = requirePermission(PERMISSIONS.ADMIN);
 export const requireUserManagement = requirePermission(PERMISSIONS.MANAGE_USERS);
 
 /**
+ * Role management permission check
+ */
+export const requireRoleManagement = requirePermission(PERMISSIONS.MANAGE_ROLES);
+
+/**
+ * View logs permission check
+ */
+export const requireViewLogs = requirePermission(PERMISSIONS.VIEW_LOGS);
+
+/**
  * Check permissions in a more flexible way for components
  */
 export async function checkPermissions(userId: string | null, requiredPermissions: string[]) {

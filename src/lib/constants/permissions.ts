@@ -46,19 +46,10 @@ export const PERMISSIONS = Object.keys(PERMISSION_DEFINITIONS).reduce(
 	},
 	{} as Record<string, string>
 ) as {
-	READ: 'read';
-	WRITE: 'write';
-	CREATE: 'create';
-	DELETE: 'delete';
 	ADMIN: 'admin';
 	MANAGE_USERS: 'manage_users';
 	MANAGE_ROLES: 'manage_roles';
-	MANAGE_PERMISSIONS: 'manage_permissions';
-	SYSTEM_CONFIG: 'system_config';
 	VIEW_LOGS: 'view_logs';
-	ANALYTICS_VIEW: 'analytics_view';
-	REPORTS_GENERATE: 'reports_generate';
-	API_ACCESS: 'api_access';
 };
 
 // Helper functions
