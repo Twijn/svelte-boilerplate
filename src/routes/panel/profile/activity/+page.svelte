@@ -36,23 +36,6 @@
 		return d.toLocaleDateString() + ' ' + d.toLocaleTimeString();
 	}
 
-	function getSeverityColor(severity: string) {
-		switch (severity) {
-			case 'critical':
-				return '#ff3b30';
-			case 'error':
-				return '#ff9500';
-			case 'warning':
-				return '#ffcc00';
-			case 'info':
-				return '#007aff';
-			case 'debug':
-				return '#8e8e93';
-			default:
-				return '#8e8e93';
-		}
-	}
-
 	function getCategoryColor(category: string) {
 		switch (category) {
 			case 'auth':

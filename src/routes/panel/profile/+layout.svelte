@@ -37,7 +37,7 @@
 
 <!-- Tab Navigation -->
 <div class="tabs col-12">
-	{#each tabs as tab}
+	{#each tabs as tab (tab.path)}
 		<a
 			href={tab.path}
 			class="tab"

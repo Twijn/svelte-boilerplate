@@ -2,11 +2,10 @@
 	interface Props {
 		value?: string;
 		onComplete?: (code: string) => void;
-		disabled?: boolean;
 		error?: boolean;
 	}
 
-	let { value = $bindable(''), onComplete, disabled = false, error = false }: Props = $props();
+	let { value = $bindable(''), onComplete, error = false }: Props = $props();
 
 	let inputs = $state<HTMLInputElement[]>([]);
 	let code = $state(value.split('').slice(0, 6));

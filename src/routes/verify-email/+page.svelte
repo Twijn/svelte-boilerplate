@@ -1,5 +1,4 @@
 <script lang="ts">
-	import { page } from '$app/stores';
 	import Button from '$lib/components/ui/Button.svelte';
 	import { FontAwesomeIcon } from '@fortawesome/svelte-fontawesome';
 	import { faCheckCircle, faTimesCircle } from '@fortawesome/free-solid-svg-icons';

@@ -1,5 +1,4 @@
 <script lang="ts">
-	import { invalidateAll } from '$app/navigation';
 	import { notifications } from '$lib/stores/notifications';
 
 	let isResending = $state(false);

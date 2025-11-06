@@ -2,8 +2,9 @@
 	import ProfileTab from '$lib/components/ui/ProfileTab.svelte';
 	import Button from '$lib/components/ui/Button.svelte';
 	import { enhance } from '$app/forms';
+	import type { PageData } from './$types';
 
-	const { data, form }: { data: any; form: any } = $props();
+	const { data }: { data: PageData } = $props();
 
 	function formatDate(date: Date): string {
 		return new Date(date).toLocaleString('en-US', {
@@ -28,7 +29,7 @@
 					</tr>
 				</thead>
 				<tbody>
-					{#each data.sessions as session}
+					{#each data.sessions as session (session.id)}
 						<tr class:current={session.id === data.currentSessionId}>
 							<td>
 								{#if session.id === data.currentSessionId}

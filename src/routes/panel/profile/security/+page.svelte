@@ -84,7 +84,7 @@
 				<div class="backup">
 					<strong>Backup Codes (save these securely):</strong>
 					<div class="codes">
-						{#each data.backupCodes as code}
+						{#each data.backupCodes as code (code)}
 							<code>{code}</code>
 						{/each}
 					</div>
