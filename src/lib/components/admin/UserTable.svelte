@@ -27,6 +27,9 @@
 		isLocked?: boolean;
 		lockedUntil?: Date | null;
 		failedLoginAttempts?: string;
+		isDisabled?: boolean;
+		disabledAt?: Date | null;
+		disableReason?: string | null;
 	}
 
 	interface Role {
@@ -42,6 +45,8 @@
 		onEdit: (user: User) => void;
 		onDelete: (user: User) => void;
 		onUnlock?: (user: User) => void;
+		onDisable?: (user: User) => void;
+		onEnable?: (user: User) => void;
 		canRemoveRole: (role: Role, allRoles: Role[]) => boolean;
 		availableRolesForUser: (user: User) => number;
 	}
@@ -53,6 +58,8 @@
 		onEdit,
 		onDelete,
 		onUnlock,
+		onDisable,
+		onEnable,
 		canRemoveRole,
 		availableRolesForUser
 	}: Props = $props();
@@ -115,7 +122,19 @@
 					</td>
 
 					<td class="status-cell">
-						{#if user.isLocked}
+						{#if user.isDisabled}
+							<button
+								class="status-badge disabled clickable"
+								onclick={() => onEnable?.(user)}
+								disabled={!onEnable}
+								title={onEnable
+									? `Disabled: ${user.disableReason || 'No reason given'}. Click to enable.`
+									: 'Cannot enable'}
+							>
+								<FontAwesomeIcon icon={faLock} />
+								<span>Disabled</span>
+							</button>
+						{:else if user.isLocked}
 							{@const isTemporary = user.lockedUntil && new Date(user.lockedUntil) > new Date()}
 							{@const isPermanent = user.isLocked && !user.lockedUntil}
 							<button
@@ -200,6 +219,17 @@
 								<FontAwesomeIcon icon={faUserPlus} />
 								<span class="button-text">Assign</span>
 							</Button>
+							{#if user.isDisabled && onEnable}
+								<Button variant="success" onClick={() => onEnable(user)} title="Enable account">
+									<FontAwesomeIcon icon={faUnlock} />
+									<span class="button-text">Enable</span>
+								</Button>
+							{:else if !user.isDisabled && onDisable}
+								<Button variant="secondary" onClick={() => onDisable(user)} title="Disable account">
+									<FontAwesomeIcon icon={faLock} />
+									<span class="button-text">Disable</span>
+								</Button>
+							{/if}
 							<Button variant="secondary" onClick={() => onEdit(user)} title="Edit user">
 								<FontAwesomeIcon icon={faEdit} />
 								<span class="button-text">Edit</span>
@@ -309,6 +339,12 @@
 		background: rgba(255, 59, 48, 0.15);
 		border-color: rgba(255, 59, 48, 0.3);
 		color: rgb(255, 100, 90);
+	}
+
+	.status-badge.disabled {
+		background: rgba(var(--orange), 0.15);
+		border-color: rgba(var(--orange), 0.3);
+		color: rgb(var(--orange));
 	}
 
 	.status-badge.warning {

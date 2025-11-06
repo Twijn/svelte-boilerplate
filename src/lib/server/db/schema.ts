@@ -1,6 +1,7 @@
 import { pgTable, text, timestamp, boolean, json } from 'drizzle-orm/pg-core';
 
-export const user = pgTable('user', {
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+export const user: any = pgTable('user', {
 	id: text('id').primaryKey(),
 	firstName: text('first_name').notNull(),
 	lastName: text('last_name').notNull(),
@@ -26,6 +27,12 @@ export const user = pgTable('user', {
 	failedLoginAttempts: text('failed_login_attempts').notNull().default('0'),
 	lastFailedLogin: timestamp('last_failed_login', { withTimezone: true, mode: 'date' }),
 	requirePasswordChange: boolean('require_password_change').notNull().default(false),
+
+	// Account disabled
+	isDisabled: boolean('is_disabled').notNull().default(false),
+	disabledAt: timestamp('disabled_at', { withTimezone: true, mode: 'date' }),
+	disabledBy: text('disabled_by').references(() => user.id, { onDelete: 'set null' }),
+	disableReason: text('disable_reason'),
 
 	// Email verification
 	emailVerified: boolean('email_verified').notNull().default(false),

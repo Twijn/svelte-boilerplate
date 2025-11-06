@@ -40,9 +40,12 @@
 	let showEditModal = $state(false);
 	let showDeleteModal = $state(false);
 	let showUnlockModal = $state(false);
+	let showDisableModal = $state(false);
+	let showEnableModal = $state(false);
 	let selectedUser = $state<User | null>(null);
 	let selectedRole = $state('');
 	let roleToRemove = $state<Role | null>(null);
+	let disableReason = $state('');
 
 	// Form state
 	let createForm = $state({
@@ -109,6 +112,17 @@
 		showUnlockModal = true;
 	}
 
+	function openDisableModal(user: User) {
+		selectedUser = user;
+		disableReason = '';
+		showDisableModal = true;
+	}
+
+	function openEnableModal(user: User) {
+		selectedUser = user;
+		showEnableModal = true;
+	}
+
 	function closeModals() {
 		showAssignModal = false;
 		showRemoveModal = false;
@@ -116,9 +130,11 @@
 		showEditModal = false;
 		showDeleteModal = false;
 		showUnlockModal = false;
+		showDisableModal = false;
+		showEnableModal = false;
 		selectedUser = null;
 		roleToRemove = null;
-		selectedRole = '';
+		disableReason = '';
 	}
 
 	// Utility functions
@@ -194,6 +210,8 @@
 	onEdit={(user) => openEditModal(user)}
 	onDelete={(user) => openDeleteModal(user)}
 	onUnlock={(user) => openUnlockModal(user)}
+	onDisable={(user) => openDisableModal(user)}
+	onEnable={(user) => openEnableModal(user)}
 	{canRemoveRole}
 />
 
@@ -494,6 +512,104 @@
 		method="POST"
 		action="?/deleteUser"
 		use:enhance
+		style="display: none;"
+	>
+		<input type="hidden" name="userId" value={selectedUser.id} />
+	</form>
+{/if}
+
+<!-- Disable User Modal -->
+<Modal isOpen={showDisableModal} onClose={closeModals} title="Disable Account">
+	{#if selectedUser}
+		<form
+			id="disable-user-form"
+			method="POST"
+			action="?/disableUser"
+			use:enhance={() => {
+				return async ({ result, update }) => {
+					if (result.type === 'success') {
+						notifications.success('Account disabled successfully');
+						closeModals();
+					} else if (result.type === 'failure') {
+						const message =
+							(result.data as { message?: string })?.message || 'Failed to disable account';
+						notifications.error(message);
+					}
+					await update();
+				};
+			}}
+		>
+			<input type="hidden" name="userId" value={selectedUser.id} />
+
+			<p>
+				Are you sure you want to disable <strong
+					>{selectedUser.firstName} {selectedUser.lastName}</strong
+				>'s account? They will be logged out from all devices and unable to log in.
+			</p>
+
+			<div class="form-group">
+				<label for="disable-reason">Reason (optional)</label>
+				<input
+					type="text"
+					id="disable-reason"
+					name="reason"
+					bind:value={disableReason}
+					placeholder="e.g., Account under review"
+					maxlength="200"
+				/>
+			</div>
+
+			<div class="modal-actions">
+				<Button variant="secondary" onClick={closeModals}>Cancel</Button>
+				<Button variant="error" type="submit">Disable Account</Button>
+			</div>
+		</form>
+	{/if}
+</Modal>
+
+<!-- Enable User Confirmation -->
+<ConfirmModal
+	bind:isOpen={showEnableModal}
+	onClose={closeModals}
+	onConfirm={() => {
+		if (selectedUser) {
+			const form = document.getElementById('enable-user-form') as HTMLFormElement;
+			form?.requestSubmit();
+		}
+	}}
+	title="Enable Account"
+	confirmText="Enable Account"
+	confirmVariant="success"
+>
+	{#snippet messageSnippet()}
+		{#if selectedUser}
+			Are you sure you want to enable <strong
+				>{selectedUser.firstName} {selectedUser.lastName}</strong
+			>'s account? They will be able to log in again.
+		{:else}
+			No selected user.
+		{/if}
+	{/snippet}
+</ConfirmModal>
+
+{#if selectedUser}
+	<form
+		id="enable-user-form"
+		method="POST"
+		action="?/enableUser"
+		use:enhance={() => {
+			return async ({ result, update }) => {
+				if (result.type === 'success') {
+					notifications.success('Account enabled successfully');
+					closeModals();
+				} else if (result.type === 'failure') {
+					const message =
+						(result.data as { message?: string })?.message || 'Failed to enable account';
+					notifications.error(message);
+				}
+				await update();
+			};
+		}}
 		style="display: none;"
 	>
 		<input type="hidden" name="userId" value={selectedUser.id} />

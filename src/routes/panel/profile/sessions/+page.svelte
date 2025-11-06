@@ -90,20 +90,4 @@
 		padding: 3rem 1rem;
 		color: var(--text-secondary);
 	}
-
-	@media (max-width: 768px) {
-		.session-header {
-			flex-direction: column;
-		}
-
-		.detail-row {
-			flex-direction: column;
-			align-items: flex-start;
-			gap: 0.25rem;
-		}
-
-		.detail-value {
-			text-align: left;
-		}
-	}
 </style>

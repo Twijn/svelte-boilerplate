@@ -1,20 +1,36 @@
 <script lang="ts">
 	import { enhance } from '$app/forms';
+	import { goto } from '$app/navigation';
 	import Button from '$lib/components/ui/Button.svelte';
 	import ConfirmModal from '$lib/components/ui/ConfirmModal.svelte';
 	import ProfileTab from '$lib/components/ui/ProfileTab.svelte';
 	import { FontAwesomeIcon } from '@fortawesome/svelte-fontawesome';
-	import { faTrash, faWarning } from '@fortawesome/free-solid-svg-icons';
+	import { faTrash, faWarning, faBan } from '@fortawesome/free-solid-svg-icons';
 
 	let showDeleteModal = $state(false);
+	let showDisableModal = $state(false);
 </script>
 
 <ProfileTab title="Danger Zone" description="Irreversible and destructive actions">
 	<div class="danger-content">
 		<p class="warning-text">
 			<FontAwesomeIcon icon={faWarning} />
-			Once you delete your account, there is no going back. This action is permanent and cannot be undone.
+			Actions in this section are destructive and may be irreversible. Proceed with caution.
 		</p>
+
+		<div class="danger-item">
+			<div class="danger-info">
+				<h4>Disable Account</h4>
+				<p>
+					Temporarily disable your account. You won't be able to log in until an admin re-enables
+					it.
+				</p>
+			</div>
+			<Button variant="error" onClick={() => (showDisableModal = true)}>
+				<FontAwesomeIcon icon={faBan} />
+				Disable Account
+			</Button>
+		</div>
 
 		<div class="danger-item">
 			<div class="danger-info">
@@ -28,6 +44,30 @@
 		</div>
 	</div>
 </ProfileTab>
+
+<!-- Disable Confirmation Modal -->
+<ConfirmModal
+	bind:isOpen={showDisableModal}
+	onClose={() => (showDisableModal = false)}
+	onConfirm={() => {
+		const form = document.getElementById('disable-account-form') as HTMLFormElement;
+		form?.requestSubmit();
+	}}
+	title="Disable Account"
+	warning="You will be logged out and unable to log back in until an administrator re-enables your account."
+	confirmText="Disable My Account"
+	confirmVariant="error"
+>
+	{#snippet messageSnippet()}
+		<p>Are you sure you want to disable your account? This will:</p>
+		<ul>
+			<li>Log you out from all devices</li>
+			<li>Prevent you from logging in</li>
+			<li>Require admin intervention to re-enable</li>
+		</ul>
+		<p>Your data will remain intact and can be restored when your account is re-enabled.</p>
+	{/snippet}
+</ConfirmModal>
 
 <!-- Delete Confirmation Modal -->
 <ConfirmModal
@@ -54,6 +94,21 @@
 		</ul>
 	{/snippet}
 </ConfirmModal>
+
+<form
+	id="disable-account-form"
+	method="POST"
+	action="?/disableAccount"
+	use:enhance={() => {
+		return async ({ result }) => {
+			if (result.type === 'success') {
+				// Redirect to login page after successful disable
+				await goto('/login');
+			}
+		};
+	}}
+	style="display: none;"
+></form>
 
 <form
 	id="delete-account-form"

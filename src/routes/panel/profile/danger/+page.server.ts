@@ -7,6 +7,49 @@ import { deleteUploadedFile } from '$lib/server/file-upload';
 import { ActivityLogService, ActivityCategory } from '$lib/server/activity-log';
 
 export const actions: Actions = {
+	disableAccount: async ({ locals }) => {
+		if (!locals.user) {
+			return fail(401, { message: 'Unauthorized', success: false });
+		}
+
+		try {
+			// Delete all sessions to log the user out everywhere
+			await db.delete(table.session).where(eq(table.session.userId, locals.user.id));
+
+			// Disable the account
+			await db
+				.update(table.user)
+				.set({
+					isDisabled: true,
+					disabledAt: new Date(),
+					disabledBy: locals.user.id,
+					disableReason: 'Account disabled by user'
+				})
+				.where(eq(table.user.id, locals.user.id));
+
+			// Log activity
+			await ActivityLogService.log({
+				userId: locals.user.id,
+				action: 'user.account.disable',
+				category: ActivityCategory.USER,
+				message: 'User disabled their account',
+				resourceType: 'user',
+				resourceId: locals.user.id
+			});
+
+			return {
+				success: true,
+				message: 'Account disabled successfully'
+			};
+		} catch (error) {
+			console.error('Error disabling account:', error);
+			return fail(500, {
+				message: 'Failed to disable account. Please try again.',
+				success: false
+			});
+		}
+	},
+
 	deleteAccount: async ({ locals }) => {
 		if (!locals.user) {
 			return fail(401, { message: 'Unauthorized', success: false });

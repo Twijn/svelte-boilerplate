@@ -9,7 +9,9 @@
 		faXmarkCircle,
 		faLock,
 		faUnlock,
-		faEnvelope
+		faEnvelope,
+		faBan,
+		faCheck
 	} from '@fortawesome/free-solid-svg-icons';
 	import Card from '../ui/Card.svelte';
 
@@ -23,6 +25,10 @@
 		isLocked?: boolean;
 		lockedUntil?: Date | null;
 		failedLoginAttempts?: string;
+		isDisabled?: boolean;
+		disabledAt?: Date | null;
+		disabledBy?: string | null;
+		disableReason?: string | null;
 	}
 
 	interface Role {
@@ -39,6 +45,8 @@
 		onEdit: () => void;
 		onDelete: () => void;
 		onUnlock?: () => void;
+		onDisable?: () => void;
+		onEnable?: () => void;
 		canRemoveRole: (role: Role, allRoles: Role[]) => boolean;
 	}
 
@@ -50,6 +58,8 @@
 		onEdit,
 		onDelete,
 		onUnlock,
+		onDisable,
+		onEnable,
 		canRemoveRole
 	}: Props = $props();
 
@@ -76,7 +86,22 @@
 	initials={getUserInitials(user)}
 	initialsTitle="{user.firstName} {user.lastName}"
 >
-	{#if user.isLocked}
+	{#if user.isDisabled}
+		<div class="disabled-status">
+			<FontAwesomeIcon icon={faBan} />
+			<div class="disabled-info">
+				<strong>Account Disabled</strong>
+				{#if user.disableReason}
+					<p class="disable-reason">{user.disableReason}</p>
+				{/if}
+				{#if user.disabledAt}
+					<p class="disabled-date">
+						Disabled on {new Date(user.disabledAt).toLocaleDateString()}
+					</p>
+				{/if}
+			</div>
+		</div>
+	{:else if user.isLocked}
 		{@const isTemporary = user.lockedUntil && new Date(user.lockedUntil) > new Date()}
 		{@const isPermanent = user.isLocked && !user.lockedUntil}
 		<button
@@ -157,6 +182,17 @@
 			Assign Role
 		</Button>
 		<div class="action-group">
+			{#if user.isDisabled && onEnable}
+				<Button variant="success" onClick={onEnable} title="Enable account">
+					<FontAwesomeIcon icon={faCheck} />
+					Enable
+				</Button>
+			{:else if !user.isDisabled && onDisable}
+				<Button variant="secondary" onClick={onDisable} title="Disable account">
+					<FontAwesomeIcon icon={faBan} />
+					Disable
+				</Button>
+			{/if}
 			<Button variant="secondary" onClick={onEdit} title="Edit user">Edit</Button>
 			<Button variant="error" onClick={onDelete} title="Delete user">Delete</Button>
 		</div>
@@ -164,6 +200,45 @@
 </Card>
 
 <style>
+	.disabled-status {
+		background: rgba(var(--orange), 0.1);
+		border: 1px solid rgb(var(--orange));
+		padding: 0.75rem;
+		border-radius: 0.5rem;
+		display: flex;
+		align-items: flex-start;
+		gap: 0.75rem;
+		margin-bottom: 0.75rem;
+		color: rgb(var(--orange));
+	}
+
+	.disabled-status :global(svg) {
+		font-size: 1.25rem;
+		margin-top: 0.1rem;
+	}
+
+	.disabled-info {
+		flex: 1;
+	}
+
+	.disabled-info strong {
+		display: block;
+		margin-bottom: 0.25rem;
+		color: var(--text-color-1);
+	}
+
+	.disable-reason {
+		margin: 0.25rem 0 0 0;
+		font-size: 0.9rem;
+		color: var(--text-color-2);
+	}
+
+	.disabled-date {
+		margin: 0.25rem 0 0 0;
+		font-size: 0.8rem;
+		color: var(--text-color-3);
+	}
+
 	.user-info {
 		margin-bottom: 0.75rem;
 		padding-bottom: 0.75rem;

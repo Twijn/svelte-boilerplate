@@ -61,6 +61,26 @@ export const actions: Actions = {
 			});
 		}
 
+		// Check if account is disabled
+		if (existingUser.isDisabled) {
+			const reason = existingUser.disableReason || 'This account has been disabled.';
+			await ActivityLogService.log({
+				userId: existingUser.id,
+				ipAddress: clientIP,
+				userAgent: event.request.headers.get('user-agent'),
+				action: ActivityActions.LOGIN_FAILED,
+				category: ActivityCategory.AUTH,
+				resourceType: 'user',
+				resourceId: existingUser.id,
+				success: false,
+				message: `Login attempt on disabled account: ${username}`
+			});
+			return fail(403, {
+				message: reason,
+				username: String(username)
+			});
+		}
+
 		// Check if account is locked
 		const lockoutStatus = await AccountLockoutService.isAccountLocked(existingUser.id);
 		if (lockoutStatus.locked) {

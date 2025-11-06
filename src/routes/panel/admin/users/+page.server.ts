@@ -36,7 +36,11 @@ export const load = async ({ locals }) => {
 			lockedUntil: table.user.lockedUntil,
 			failedLoginAttempts: table.user.failedLoginAttempts,
 			lastFailedLogin: table.user.lastFailedLogin,
-			requirePasswordChange: table.user.requirePasswordChange
+			requirePasswordChange: table.user.requirePasswordChange,
+			isDisabled: table.user.isDisabled,
+			disabledAt: table.user.disabledAt,
+			disabledBy: table.user.disabledBy,
+			disableReason: table.user.disableReason
 		})
 		.from(table.user);
 
@@ -586,6 +590,157 @@ export const actions = {
 			);
 
 			return fail(500, { message: 'Failed to unlock account' });
+		}
+	},
+
+	disableUser: async ({ request, locals }) => {
+		await requireAdmin(locals.user?.id || null);
+
+		const formData = await request.formData();
+		const userId = formData.get('userId') as string;
+		const reason = formData.get('reason') as string;
+
+		if (!userId) {
+			return fail(400, { message: 'User ID is required' });
+		}
+
+		try {
+			// Check if user exists
+			const existingUser = await db
+				.select()
+				.from(table.user)
+				.where(eq(table.user.id, userId))
+				.limit(1);
+
+			if (existingUser.length === 0) {
+				return fail(404, { message: 'User not found' });
+			}
+
+			// Prevent disabling self
+			if (userId === locals.user?.id) {
+				return fail(400, { message: 'You cannot disable your own account' });
+			}
+
+			// Delete all sessions to log the user out everywhere
+			await db.delete(table.session).where(eq(table.session.userId, userId));
+
+			// Disable the user account
+			await db
+				.update(table.user)
+				.set({
+					isDisabled: true,
+					disabledAt: new Date(),
+					disabledBy: locals.user?.id,
+					disableReason: reason || 'Account disabled by administrator'
+				})
+				.where(eq(table.user.id, userId));
+
+			// Log account disable
+			await ActivityLogService.log({
+				userId: locals.user?.id,
+				ipAddress: request.headers.get('x-forwarded-for')?.split(',')[0].trim() || 'unknown',
+				userAgent: request.headers.get('user-agent'),
+				action: 'user.account.disable',
+				category: ActivityCategory.USER,
+				severity: LogSeverity.WARNING,
+				resourceType: 'user',
+				resourceId: userId,
+				metadata: { disabledBy: locals.user?.id, reason },
+				message: `User account disabled: ${existingUser[0].username}`,
+				success: true
+			});
+
+			return { success: true, message: 'Account disabled successfully' };
+		} catch (error) {
+			console.error('Error disabling user:', error);
+
+			// Log failure
+			await ActivityLogService.logFailure(
+				'user.account.disable',
+				ActivityCategory.USER,
+				error instanceof Error ? error.message : 'Unknown error',
+				{
+					userId: locals.user?.id,
+					ipAddress: request.headers.get('x-forwarded-for')?.split(',')[0].trim() || 'unknown',
+					userAgent: request.headers.get('user-agent'),
+					resourceType: 'user',
+					resourceId: userId,
+					severity: LogSeverity.ERROR
+				}
+			);
+
+			return fail(500, { message: 'Failed to disable account' });
+		}
+	},
+
+	enableUser: async ({ request, locals }) => {
+		await requireAdmin(locals.user?.id || null);
+
+		const formData = await request.formData();
+		const userId = formData.get('userId') as string;
+
+		if (!userId) {
+			return fail(400, { message: 'User ID is required' });
+		}
+
+		try {
+			// Check if user exists
+			const existingUser = await db
+				.select()
+				.from(table.user)
+				.where(eq(table.user.id, userId))
+				.limit(1);
+
+			if (existingUser.length === 0) {
+				return fail(404, { message: 'User not found' });
+			}
+
+			// Enable the user account
+			await db
+				.update(table.user)
+				.set({
+					isDisabled: false,
+					disabledAt: null,
+					disabledBy: null,
+					disableReason: null
+				})
+				.where(eq(table.user.id, userId));
+
+			// Log account enable
+			await ActivityLogService.log({
+				userId: locals.user?.id,
+				ipAddress: request.headers.get('x-forwarded-for')?.split(',')[0].trim() || 'unknown',
+				userAgent: request.headers.get('user-agent'),
+				action: 'user.account.enable',
+				category: ActivityCategory.USER,
+				severity: LogSeverity.INFO,
+				resourceType: 'user',
+				resourceId: userId,
+				metadata: { enabledBy: locals.user?.id },
+				message: `User account enabled: ${existingUser[0].username}`,
+				success: true
+			});
+
+			return { success: true, message: 'Account enabled successfully' };
+		} catch (error) {
+			console.error('Error enabling user:', error);
+
+			// Log failure
+			await ActivityLogService.logFailure(
+				'user.account.enable',
+				ActivityCategory.USER,
+				error instanceof Error ? error.message : 'Unknown error',
+				{
+					userId: locals.user?.id,
+					ipAddress: request.headers.get('x-forwarded-for')?.split(',')[0].trim() || 'unknown',
+					userAgent: request.headers.get('user-agent'),
+					resourceType: 'user',
+					resourceId: userId,
+					severity: LogSeverity.ERROR
+				}
+			);
+
+			return fail(500, { message: 'Failed to enable account' });
 		}
 	}
 };
