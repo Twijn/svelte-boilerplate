@@ -7,7 +7,8 @@
 		faLock,
 		faEnvelope,
 		faShieldAlt,
-		faExclamationTriangle
+		faExclamationTriangle,
+		faHistory
 	} from '@fortawesome/free-solid-svg-icons';
 	import { APP_NAME } from '$lib/consts';
 
@@ -16,6 +17,7 @@
 		{ path: '/panel/profile/password', label: 'Password', icon: faLock },
 		{ path: '/panel/profile/email', label: 'Email', icon: faEnvelope },
 		{ path: '/panel/profile/security', label: 'Security', icon: faShieldAlt },
+		{ path: '/panel/profile/activity', label: 'Activity', icon: faHistory },
 		{
 			path: '/panel/profile/danger',
 			label: 'Danger Zone',
