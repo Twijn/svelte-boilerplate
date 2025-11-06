@@ -103,8 +103,8 @@
 		</fieldset>
 
 		<div class="form-actions">
-			<Button full type="submit" variant="primary">Create Account</Button>
-			<Button full variant="link" href="/login">Sign in here</Button>
+			<Button arrow full type="submit" variant="primary">Create Account</Button>
+			<Button full variant="link" href="/login">Already have an account? Log in here</Button>
 		</div>
 	</form>
 </CenteredSection>

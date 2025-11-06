@@ -45,11 +45,8 @@
 		</fieldset>
 
 		<div class="form-actions">
-			<Button full type="submit" variant="primary">Login</Button>
-			<p class="secondary-text">
-				Don't have an account?
-				<a href="/register" class="link-primary">Sign up here</a>
-			</p>
+			<Button arrow full type="submit" variant="primary">Login</Button>
+			<Button full variant="link" href="/register">Don't have an account? Sign up here</Button>
 		</div>
 	</form>
 </CenteredSection>

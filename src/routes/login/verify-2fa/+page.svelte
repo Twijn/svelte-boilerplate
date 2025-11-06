@@ -64,11 +64,7 @@
 				<input type="hidden" name="totpCode" bind:value={totpCode} />
 
 				<div class="totp-input-wrapper">
-					<TotpInput
-						onComplete={handleTotpComplete}
-						error={form?.type === 'error'}
-						disabled={isSubmitting}
-					/>
+					<TotpInput onComplete={handleTotpComplete} error={form?.type === 'error'} />
 				</div>
 
 				<Button
