@@ -96,7 +96,7 @@
 	.arrow :global(svg) {
 		position: absolute;
 		top: 50%;
-		right: 0.75rem;
+		right: 0.3rem;
 		transform: translateY(-50%);
 		transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
 		opacity: 0.9;
