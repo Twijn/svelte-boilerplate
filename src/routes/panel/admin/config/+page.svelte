@@ -3,6 +3,7 @@
 	import Button from '$lib/components/ui/Button.svelte';
 	import SortableTable from '$lib/components/ui/SortableTable.svelte';
 	import Tabs from '$lib/components/ui/Tabs.svelte';
+	import SearchInput from '$lib/components/ui/SearchInput.svelte';
 	import { enhance } from '$app/forms';
 	import { notifications } from '$lib/stores/notifications';
 	import {
@@ -154,17 +155,7 @@
 <Heading text="System Configuration" description="Manage system settings and configuration" />
 
 <div class="col-12">
-	<div class="search-container">
-		<input
-			type="text"
-			bind:value={searchQuery}
-			placeholder="Search configuration..."
-			class="search-input"
-		/>
-		{#if searchQuery}
-			<button class="clear-search" onclick={() => (searchQuery = '')}>Clear</button>
-		{/if}
-	</div>
+	<SearchInput bind:value={searchQuery} placeholder="Search configuration..." />
 
 	<Tabs {tabs} bind:activeTab={activeCategory} onTabChange={(id) => (activeCategory = id)}>
 		{#snippet content({ activeTab })}
@@ -244,50 +235,6 @@
 </div>
 
 <style>
-	.search-container {
-		position: relative;
-		max-width: 600px;
-		margin-bottom: 1.5rem;
-	}
-
-	.search-input {
-		width: 100%;
-		padding: 0.75rem 1rem;
-		padding-right: 5rem;
-		background: var(--background-color-2);
-		border: 1px solid rgba(255, 255, 255, 0.1);
-		border-radius: 8px;
-		color: var(--text-color-1);
-		font-size: 0.95rem;
-		box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-	}
-
-	.search-input:focus {
-		outline: none;
-		border-color: var(--theme-color-2);
-		box-shadow: 0 0 0 3px rgba(var(--theme-color-rgb), 0.1);
-	}
-
-	.clear-search {
-		position: absolute;
-		right: 0.75rem;
-		top: 50%;
-		transform: translateY(-50%);
-		padding: 0.4rem 0.75rem;
-		background: rgba(255, 255, 255, 0.1);
-		border: 1px solid rgba(255, 255, 255, 0.2);
-		border-radius: 4px;
-		color: var(--text-color-2);
-		font-size: 0.85rem;
-		cursor: pointer;
-		transition: all 0.2s ease;
-	}
-
-	.clear-search:hover {
-		background: rgba(255, 255, 255, 0.15);
-		color: var(--text-color-1);
-	}
-
 	.setting-info {
 		display: flex;
 		flex-direction: column;

@@ -6,6 +6,7 @@
 	import StatCard from '$lib/components/ui/StatCard.svelte';
 	import AvatarUpload from '$lib/components/ui/AvatarUpload.svelte';
 	import { enhance } from '$app/forms';
+	import { invalidate } from '$app/navigation';
 	import { notifications } from '$lib/stores/notifications';
 	import Heading from '$lib/components/layout/Heading.svelte';
 	import {
@@ -50,6 +51,13 @@
 	let disableReason = $state('');
 	let selectedAvatarFile = $state<File | null>(null);
 	let removeAvatar = $state(false);
+
+	// Bulk action modal state
+	let showBulkDisableModal = $state(false);
+	let showBulkEnableModal = $state(false);
+	let showBulkDeleteModal = $state(false);
+	let bulkSelectedUsers = $state<User[]>([]);
+	let bulkDisableReason = $state('');
 
 	// Form state
 	let createForm = $state({
@@ -136,11 +144,91 @@
 		showUnlockModal = false;
 		showDisableModal = false;
 		showEnableModal = false;
+		showBulkDisableModal = false;
+		showBulkEnableModal = false;
+		showBulkDeleteModal = false;
 		selectedUser = null;
 		roleToRemove = null;
 		disableReason = '';
+		bulkDisableReason = '';
+		bulkSelectedUsers = [];
 		selectedAvatarFile = null;
 		removeAvatar = false;
+	}
+
+	// Bulk action handlers
+	async function handleBulkDisable(users: User[], reason: string) {
+		bulkSelectedUsers = users;
+		bulkDisableReason = '';
+		showBulkDisableModal = true;
+	}
+
+	async function handleBulkEnable(users: User[]) {
+		bulkSelectedUsers = users;
+		showBulkEnableModal = true;
+	}
+
+	async function handleBulkDelete(users: User[]) {
+		bulkSelectedUsers = users;
+		showBulkDeleteModal = true;
+	}
+
+	async function submitBulkDisable() {
+		for (const user of bulkSelectedUsers) {
+			const formData = new FormData();
+			formData.append('userId', user.id);
+			formData.append('reason', bulkDisableReason);
+
+			await fetch('?/disableUser', {
+				method: 'POST',
+				body: formData
+			});
+		}
+		notifications.success(
+			`Disabled ${bulkSelectedUsers.length} user${bulkSelectedUsers.length !== 1 ? 's' : ''}`
+		);
+		closeModals();
+		// Invalidate data to trigger a refresh
+		await invalidate('app:users');
+		return false;
+	}
+
+	async function submitBulkEnable() {
+		for (const user of bulkSelectedUsers) {
+			const formData = new FormData();
+			formData.append('userId', user.id);
+
+			await fetch('?/enableUser', {
+				method: 'POST',
+				body: formData
+			});
+		}
+		notifications.success(
+			`Enabled ${bulkSelectedUsers.length} user${bulkSelectedUsers.length !== 1 ? 's' : ''}`
+		);
+		closeModals();
+		// Invalidate data to trigger a refresh
+		await invalidate('app:users');
+		return false;
+	}
+
+	async function submitBulkDelete() {
+		for (const user of bulkSelectedUsers) {
+			const formData = new FormData();
+			formData.append('userId', user.id);
+
+			await fetch('?/deleteUser', {
+				method: 'POST',
+				body: formData
+			});
+		}
+		notifications.success(
+			`Deleted ${bulkSelectedUsers.length} user${bulkSelectedUsers.length !== 1 ? 's' : ''}`
+		);
+		closeModals();
+		// Invalidate data to trigger a refresh
+		await invalidate('app:users');
+		return false;
 	}
 
 	// Utility functions
@@ -218,6 +306,9 @@
 	onUnlock={(user) => openUnlockModal(user)}
 	onDisable={(user) => openDisableModal(user)}
 	onEnable={(user) => openEnableModal(user)}
+	onBulkDisable={handleBulkDisable}
+	onBulkEnable={handleBulkEnable}
+	onBulkDelete={handleBulkDelete}
 	{canRemoveRole}
 />
 
@@ -695,6 +786,68 @@
 		<input type="hidden" name="userId" value={selectedUser.id} />
 	</form>
 {/if}
+
+<!-- Bulk Disable Users Modal -->
+<Modal isOpen={showBulkDisableModal} onClose={closeModals} title="Disable Multiple Accounts">
+	<p>
+		Are you sure you want to disable <strong
+			>{bulkSelectedUsers.length} user{bulkSelectedUsers.length !== 1 ? 's' : ''}</strong
+		>? They will be logged out from all devices and unable to log in.
+	</p>
+
+	<div class="form-group">
+		<label for="bulk-disable-reason">Reason (optional)</label>
+		<input
+			type="text"
+			id="bulk-disable-reason"
+			bind:value={bulkDisableReason}
+			placeholder="e.g., Account under review"
+			maxlength="200"
+		/>
+	</div>
+
+	<div class="modal-actions">
+		<Button variant="secondary" onClick={closeModals}>Cancel</Button>
+		<Button variant="error" onClick={submitBulkDisable}>Disable Accounts</Button>
+	</div>
+</Modal>
+
+<!-- Bulk Enable Users Confirmation -->
+<ConfirmModal
+	bind:isOpen={showBulkEnableModal}
+	onClose={closeModals}
+	onConfirm={submitBulkEnable}
+	title="Enable Multiple Accounts"
+	confirmText="Enable Accounts"
+	confirmVariant="success"
+>
+	{#snippet messageSnippet()}
+		<p>
+			Are you sure you want to enable <strong
+				>{bulkSelectedUsers.length} user{bulkSelectedUsers.length !== 1 ? 's' : ''}</strong
+			>?
+		</p>
+	{/snippet}
+</ConfirmModal>
+
+<!-- Bulk Delete Users Confirmation -->
+<ConfirmModal
+	bind:isOpen={showBulkDeleteModal}
+	onClose={closeModals}
+	onConfirm={submitBulkDelete}
+	title="Delete Multiple Users"
+	warning="This action cannot be undone. All user data, roles, and sessions will be permanently deleted for the selected users."
+	confirmText="Delete Users"
+	confirmVariant="error"
+>
+	{#snippet messageSnippet()}
+		<p>
+			Are you sure you want to delete <strong
+				>{bulkSelectedUsers.length} user{bulkSelectedUsers.length !== 1 ? 's' : ''}</strong
+			>?
+		</p>
+	{/snippet}
+</ConfirmModal>
 
 <style>
 	/* Form Styles */

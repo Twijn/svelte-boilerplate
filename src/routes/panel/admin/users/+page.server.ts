@@ -27,9 +27,12 @@ import {
 	deleteUploadedFile
 } from '$lib/server/file-upload';
 
-export const load = async ({ locals }) => {
+export const load = async ({ locals, depends }) => {
 	// Check if user has admin permission
 	await requireUserManagement(locals.user?.id || null);
+
+	// Add dependency for invalidation
+	depends('app:users');
 
 	// Get all users with their roles
 	const users = await db
