@@ -1,7 +1,7 @@
 <script lang="ts" generics="T extends Record<string, unknown>">
 	import { FontAwesomeIcon } from '@fortawesome/svelte-fontawesome';
 	import { faSort, faSortUp, faSortDown } from '@fortawesome/free-solid-svg-icons';
-	import { fly, scale } from 'svelte/transition';
+	import { fly } from 'svelte/transition';
 	import { flip } from 'svelte/animate';
 	import type { Snippet } from 'svelte';
 
