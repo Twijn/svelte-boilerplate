@@ -2,11 +2,30 @@
 	import Heading from '$lib/components/layout/Heading.svelte';
 	import Button from '$lib/components/ui/Button.svelte';
 	import SortableTable from '$lib/components/ui/SortableTable.svelte';
+	import Tabs from '$lib/components/ui/Tabs.svelte';
 	import { enhance } from '$app/forms';
 	import { notifications } from '$lib/stores/notifications';
+	import {
+		faCog,
+		faEnvelope,
+		faCloud,
+		faGauge,
+		faShieldAlt,
+		faServer
+	} from '@fortawesome/free-solid-svg-icons';
 	import type { PageData, ActionData } from './$types';
 
 	let { data, form }: { data: PageData; form: ActionData } = $props();
+
+	// Category icons mapping
+	const categoryIcons: Record<string, any> = {
+		app: faCog,
+		email: faEnvelope,
+		storage: faCloud,
+		rate_limiting: faGauge,
+		security: faShieldAlt,
+		all: faServer
+	};
 
 	// Show notifications based on form results
 	$effect(() => {
@@ -23,6 +42,22 @@
 	let editingKey = $state<string | null>(null);
 	let editValue = $state<string | number | boolean>('');
 	let searchQuery = $state('');
+	let activeCategory = $state('all');
+
+	// Build tabs from categories
+	const tabs = $derived.by(() => {
+		const categoryTabs = Object.entries(data.grouped).map(([category, configs]) => ({
+			id: category,
+			label: getCategoryLabel(category),
+			icon: categoryIcons[category] || faCog,
+			count: configs.length
+		}));
+
+		return [
+			{ id: 'all', label: 'All Settings', icon: categoryIcons.all, count: data.configs.length },
+			...categoryTabs
+		];
+	});
 
 	// Flatten configs with category information for the table
 	const flatConfigs = $derived.by(() => {
@@ -42,17 +77,27 @@
 		return flat;
 	});
 
-	// Filter configs based on search
+	// Filter configs based on search and active category
 	const filteredConfigs = $derived.by(() => {
-		if (!searchQuery.trim()) return flatConfigs;
+		let configs = flatConfigs;
 
-		const query = searchQuery.toLowerCase();
-		return flatConfigs.filter(
-			(c) =>
-				c.key.toLowerCase().includes(query) ||
-				c.description?.toLowerCase().includes(query) ||
-				c.category.toLowerCase().includes(query)
-		);
+		// Filter by category
+		if (activeCategory !== 'all') {
+			configs = configs.filter((c) => c.category === activeCategory);
+		}
+
+		// Filter by search query
+		if (searchQuery.trim()) {
+			const query = searchQuery.toLowerCase();
+			configs = configs.filter(
+				(c) =>
+					c.key.toLowerCase().includes(query) ||
+					c.description?.toLowerCase().includes(query) ||
+					c.category.toLowerCase().includes(query)
+			);
+		}
+
+		return configs;
 	});
 
 	const columns = [
@@ -109,94 +154,138 @@
 <Heading text="System Configuration" description="Manage system settings and configuration" />
 
 <div class="col-12">
-	<input
-		type="text"
-		bind:value={searchQuery}
-		placeholder="Search configuration..."
-		class="search-input"
-	/>
+	<div class="search-container">
+		<input
+			type="text"
+			bind:value={searchQuery}
+			placeholder="Search configuration..."
+			class="search-input"
+		/>
+		{#if searchQuery}
+			<button class="clear-search" onclick={() => (searchQuery = '')}>Clear</button>
+		{/if}
+	</div>
 
-	{#if filteredConfigs.length > 0}
-		<SortableTable data={filteredConfigs} columns={displayColumns} rowKey={(config) => config.key}>
-			{#snippet cellContent({ item: config, column })}
-				{#if column.key === 'key'}
-					<div class="setting-info">
-						<code class="config-key">{config.key}</code>
-						{#if !config.isDefault}
-							<span class="badge badge-warning">Modified</span>
-						{/if}
-						{#if config.description}
-							<div class="setting-desc">{config.description}</div>
-						{/if}
-						<small>Type: {config.type}</small>
-					</div>
-				{:else if column.key === 'value'}
-					{#if editingKey === config.key}
-						<form method="POST" action="?/update" use:enhance class="inline-form">
-							<input type="hidden" name="key" value={config.key} />
-							<input type="hidden" name="type" value={config.type} />
-
-							{#if config.type === 'boolean'}
-								<select name="value" bind:value={editValue}>
-									<option value="true">Enabled</option>
-									<option value="false">Disabled</option>
-								</select>
-							{:else if config.type === 'number'}
-								<input type="number" name="value" bind:value={editValue} required />
-							{:else if config.type === 'json'}
-								<textarea name="value" bind:value={editValue} rows="3" required></textarea>
-							{:else}
-								<input type="text" name="value" bind:value={editValue} required />
-							{/if}
-
-							<div class="inline-actions">
-								<Button type="submit">Save</Button>
-								<Button type="button" onClick={cancelEdit} variant="secondary">Cancel</Button>
+	<Tabs {tabs} bind:activeTab={activeCategory} onTabChange={(id) => (activeCategory = id)}>
+		{#snippet content({ activeTab })}
+			{#if filteredConfigs.length > 0}
+				<SortableTable
+					data={filteredConfigs}
+					columns={displayColumns}
+					rowKey={(config) => config.key}
+				>
+					{#snippet cellContent({ item: config, column })}
+						{#if column.key === 'key'}
+							<div class="setting-info">
+								<code class="config-key">{config.key}</code>
+								{#if !config.isDefault}
+									<span class="badge badge-warning">Modified</span>
+								{/if}
+								{#if config.description}
+									<div class="setting-desc">{config.description}</div>
+								{/if}
+								<small>Type: {config.type}</small>
 							</div>
-						</form>
-					{:else}
-						<code class="value-display">{formatValue(config.value, config.type)}</code>
-					{/if}
-				{:else if column.key === 'defaultValue'}
-					<code class="default-value">{formatValue(config.defaultValue, config.type)}</code>
-				{:else if column.key === 'isEditable' && column.label === 'Actions'}
-					{#if config.isEditable && editingKey !== config.key}
-						<div class="action-buttons">
-							<Button onClick={() => startEdit(config.key, config.value)}>Edit</Button>
-							{#if !config.isDefault}
-								<form method="POST" action="?/reset" use:enhance>
+						{:else if column.key === 'value'}
+							{#if editingKey === config.key}
+								<form method="POST" action="?/update" use:enhance class="inline-form">
 									<input type="hidden" name="key" value={config.key} />
-									<Button type="submit" variant="secondary">Reset</Button>
+									<input type="hidden" name="type" value={config.type} />
+
+									{#if config.type === 'boolean'}
+										<select name="value" bind:value={editValue}>
+											<option value="true">Enabled</option>
+											<option value="false">Disabled</option>
+										</select>
+									{:else if config.type === 'number'}
+										<input type="number" name="value" bind:value={editValue} required />
+									{:else if config.type === 'json'}
+										<textarea name="value" bind:value={editValue} rows="3" required></textarea>
+									{:else}
+										<input type="text" name="value" bind:value={editValue} required />
+									{/if}
+
+									<div class="inline-actions">
+										<Button type="submit">Save</Button>
+										<Button type="button" onClick={cancelEdit} variant="secondary">Cancel</Button>
+									</div>
 								</form>
+							{:else}
+								<code class="value-display">{formatValue(config.value, config.type)}</code>
 							{/if}
-						</div>
+						{:else if column.key === 'defaultValue'}
+							<code class="default-value">{formatValue(config.defaultValue, config.type)}</code>
+						{:else if column.key === 'isEditable' && column.label === 'Actions'}
+							{#if config.isEditable && editingKey !== config.key}
+								<div class="action-buttons">
+									<Button onClick={() => startEdit(config.key, config.value)}>Edit</Button>
+									{#if !config.isDefault}
+										<form method="POST" action="?/reset" use:enhance>
+											<input type="hidden" name="key" value={config.key} />
+											<Button type="submit" variant="secondary">Reset</Button>
+										</form>
+									{/if}
+								</div>
+							{/if}
+						{/if}
+					{/snippet}
+				</SortableTable>
+			{:else}
+				<div class="empty-state">
+					{#if searchQuery}
+						<p>No configuration variables found matching "{searchQuery}"</p>
+					{:else}
+						<p>No configuration variables in this category</p>
 					{/if}
-				{/if}
-			{/snippet}
-		</SortableTable>
-	{:else}
-		<div class="empty-state">
-			<p>No configuration variables found matching "{searchQuery}"</p>
-		</div>
-	{/if}
+				</div>
+			{/if}
+		{/snippet}
+	</Tabs>
 </div>
 
 <style>
+	.search-container {
+		position: relative;
+		max-width: 600px;
+		margin-bottom: 1.5rem;
+	}
+
 	.search-input {
 		width: 100%;
-		max-width: 500px;
 		padding: 0.75rem 1rem;
+		padding-right: 5rem;
 		background: var(--background-color-2);
 		border: 1px solid rgba(255, 255, 255, 0.1);
-		border-radius: 6px;
+		border-radius: 8px;
 		color: var(--text-color-1);
 		font-size: 0.95rem;
-		margin-bottom: 2rem;
+		box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
 	}
 
 	.search-input:focus {
 		outline: none;
 		border-color: var(--theme-color-2);
+		box-shadow: 0 0 0 3px rgba(var(--theme-color-rgb), 0.1);
+	}
+
+	.clear-search {
+		position: absolute;
+		right: 0.75rem;
+		top: 50%;
+		transform: translateY(-50%);
+		padding: 0.4rem 0.75rem;
+		background: rgba(255, 255, 255, 0.1);
+		border: 1px solid rgba(255, 255, 255, 0.2);
+		border-radius: 4px;
+		color: var(--text-color-2);
+		font-size: 0.85rem;
+		cursor: pointer;
+		transition: all 0.2s ease;
+	}
+
+	.clear-search:hover {
+		background: rgba(255, 255, 255, 0.15);
+		color: var(--text-color-1);
 	}
 
 	.setting-info {
