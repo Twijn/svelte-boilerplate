@@ -22,6 +22,7 @@
 	import { SvelteURLSearchParams } from 'svelte/reactivity';
 	import Pagination from '$lib/components/ui/Pagination.svelte';
 	import SortableTable from '$lib/components/ui/SortableTable.svelte';
+	import UserAvatar from '$lib/components/ui/UserAvatar.svelte';
 	import type { Column } from '$lib/components/ui/SortableTable.types';
 
 	type ActivityLog = {
@@ -34,6 +35,11 @@
 		success: boolean;
 		message: string | null;
 		ipAddress: string | null;
+		// User info
+		userName: string | null;
+		userFirstName: string | null;
+		userLastName: string | null;
+		userAvatar: string | null;
 	};
 
 	const { data } = $props();
@@ -436,9 +442,29 @@
 				{log.severity}
 			</span>
 		{:else if column.key === 'userId'}
-			<span class="user-cell">
-				{log.userId || 'N/A'}
-			</span>
+			<div class="user-cell-wrapper">
+				{#if log.userName}
+					<div class="user-info">
+						<UserAvatar
+							avatar={log.userAvatar}
+							firstName={log.userFirstName}
+							lastName={log.userLastName}
+							username={log.userName}
+							size="small"
+						/>
+						<div class="user-details">
+							<span class="user-name">
+								{log.userFirstName && log.userLastName
+									? `${log.userFirstName} ${log.userLastName}`
+									: log.userName}
+							</span>
+							<span class="user-username">@{log.userName}</span>
+						</div>
+					</div>
+				{:else}
+					<span class="system-user">System</span>
+				{/if}
+			</div>
 		{:else if column.key === 'success'}
 			<span class="status-badge {log.success ? 'success' : 'failure'}">
 				<FontAwesomeIcon icon={getStatusIcon(log.success)} />
@@ -560,9 +586,41 @@
 		color: var(--theme-color-2);
 	}
 
-	.user-cell {
+	.user-cell-wrapper {
+		display: flex;
+		align-items: center;
+	}
+
+	.user-info {
+		display: flex;
+		align-items: center;
+		gap: 0.75rem;
+	}
+
+	.user-details {
+		display: flex;
+		flex-direction: column;
+		gap: 0.1rem;
+	}
+
+	.user-name {
+		font-size: 0.9rem;
+		font-weight: 600;
+		color: var(--text-color-1);
+	}
+
+	.user-username {
+		font-size: 0.75rem;
+		color: var(--text-color-2);
 		font-family: 'Fira Code', monospace;
-		font-size: 0.8rem;
+	}
+
+	.system-user {
+		display: block;
+		font-size: 0.9rem;
+		color: var(--text-color-3);
+		font-style: italic;
+		text-align: center;
 	}
 
 	.ip-cell code {

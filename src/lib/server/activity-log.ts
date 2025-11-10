@@ -280,6 +280,100 @@ export class ActivityLogService {
 	}
 
 	/**
+	 * Query activity logs with user information (for display purposes)
+	 */
+	static async queryWithUsers(options: QueryActivityOptions = {}) {
+		let query = db
+			.select({
+				id: table.activityLog.id,
+				userId: table.activityLog.userId,
+				ipAddress: table.activityLog.ipAddress,
+				userAgent: table.activityLog.userAgent,
+				action: table.activityLog.action,
+				category: table.activityLog.category,
+				severity: table.activityLog.severity,
+				resourceType: table.activityLog.resourceType,
+				resourceId: table.activityLog.resourceId,
+				metadata: table.activityLog.metadata,
+				message: table.activityLog.message,
+				success: table.activityLog.success,
+				errorMessage: table.activityLog.errorMessage,
+				duration: table.activityLog.duration,
+				createdAt: table.activityLog.createdAt,
+				// User info
+				userName: table.user.username,
+				userFirstName: table.user.firstName,
+				userLastName: table.user.lastName,
+				userAvatar: table.user.avatar
+			})
+			.from(table.activityLog)
+			.leftJoin(table.user, eq(table.activityLog.userId, table.user.id));
+
+		const conditions = [];
+
+		if (options.userId) {
+			conditions.push(eq(table.activityLog.userId, options.userId));
+		}
+		if (options.ipAddress) {
+			conditions.push(eq(table.activityLog.ipAddress, options.ipAddress));
+		}
+		if (options.action) {
+			conditions.push(eq(table.activityLog.action, options.action));
+		}
+		if (options.category) {
+			conditions.push(eq(table.activityLog.category, options.category));
+		}
+		if (options.severity) {
+			conditions.push(eq(table.activityLog.severity, options.severity));
+		}
+		if (options.resourceType) {
+			conditions.push(eq(table.activityLog.resourceType, options.resourceType));
+		}
+		if (options.resourceId) {
+			conditions.push(eq(table.activityLog.resourceId, options.resourceId));
+		}
+		if (options.success !== undefined) {
+			conditions.push(eq(table.activityLog.success, options.success));
+		}
+		if (options.startDate) {
+			conditions.push(gte(table.activityLog.createdAt, options.startDate));
+		}
+		if (options.endDate) {
+			conditions.push(lte(table.activityLog.createdAt, options.endDate));
+		}
+
+		if (conditions.length > 0) {
+			query = query.where(and(...conditions)) as typeof query;
+		}
+
+		// Handle sorting
+		if (options.sortBy && options.sortDirection) {
+			const column = table.activityLog[options.sortBy as keyof typeof table.activityLog];
+			if (column) {
+				const orderExpr =
+					options.sortDirection === 'asc' ? sql`${column} ASC` : sql`${column} DESC`;
+				query = query.orderBy(orderExpr) as typeof query;
+			} else {
+				// Default: order by most recent first
+				query = query.orderBy(sql`${table.activityLog.createdAt} DESC`) as typeof query;
+			}
+		} else {
+			// Default: order by most recent first
+			query = query.orderBy(sql`${table.activityLog.createdAt} DESC`) as typeof query;
+		}
+
+		// Apply pagination
+		if (options.limit) {
+			query = query.limit(options.limit) as typeof query;
+		}
+		if (options.offset) {
+			query = query.offset(options.offset) as typeof query;
+		}
+
+		return await query;
+	}
+
+	/**
 	 * Get activity logs for a specific user
 	 */
 	static async getUserActivity(userId: string, limit: number = 50): Promise<table.ActivityLog[]> {

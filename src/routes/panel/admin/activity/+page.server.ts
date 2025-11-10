@@ -43,7 +43,7 @@ export const load: PageServerLoad = async ({ locals, url, depends }) => {
 	if (dateTo) filters.endDate = new Date(dateTo);
 
 	// Query activity logs
-	const activities = await ActivityLogService.query({
+	const activities = await ActivityLogService.queryWithUsers({
 		...filters,
 		limit,
 		offset,
