@@ -90,7 +90,9 @@ Snippet for rendering cell content.
 		isDefault: boolean;
 	}
 
-	const configs: Config[] = $state([...]);
+	const configs: Config[] = $state([
+		// your config data here
+	]);
 
 	const columns = [
 		{
@@ -110,7 +112,7 @@ Snippet for rendering cell content.
 		{
 			key: 'isDefault',
 			label: 'Status',
-			sortValue: (config) => config.isDefault ? 1 : 0 // Modified configs first
+			sortValue: (config) => (config.isDefault ? 1 : 0) // Modified configs first
 		}
 	];
 </script>
