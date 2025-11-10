@@ -35,6 +35,18 @@ export const PERMISSION_DEFINITIONS: Record<string, PermissionMetadata> = {
 		label: 'View Logs',
 		description: 'Access activity logs and audit trails',
 		category: 'system'
+	},
+	view_config: {
+		key: 'view_config',
+		label: 'View Configuration',
+		description: 'View system configuration settings',
+		category: 'system'
+	},
+	edit_config: {
+		key: 'edit_config',
+		label: 'Edit Configuration',
+		description: 'Modify system configuration settings (rate limits, security, etc.)',
+		category: 'system'
 	}
 } as const;
 
@@ -50,6 +62,8 @@ export const PERMISSIONS = Object.keys(PERMISSION_DEFINITIONS).reduce(
 	MANAGE_USERS: 'manage_users';
 	MANAGE_ROLES: 'manage_roles';
 	VIEW_LOGS: 'view_logs';
+	VIEW_CONFIG: 'view_config';
+	EDIT_CONFIG: 'edit_config';
 };
 
 // Helper functions

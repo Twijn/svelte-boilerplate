@@ -163,6 +163,19 @@ export const activityLog = pgTable('activity_log', {
 	duration: text('duration') // Optional: how long the action took (in ms)
 });
 
+// Configuration variables - database-backed config for runtime settings
+export const configVariable = pgTable('config_variable', {
+	key: text('key').primaryKey(),
+	value: text('value').notNull(), // Stored as string, parsed based on type
+	type: text('type').notNull(), // 'string', 'number', 'boolean', 'json'
+	category: text('category').notNull(), // e.g., 'rate_limit', 'email', 'security', 'feature'
+	description: text('description'),
+	defaultValue: text('default_value').notNull(),
+	isEditable: boolean('is_editable').notNull().default(true), // Some vars may be readonly
+	updatedAt: timestamp('updated_at', { withTimezone: true, mode: 'date' }).notNull().defaultNow(),
+	updatedBy: text('updated_by').references(() => user.id, { onDelete: 'set null' })
+});
+
 export type User = typeof user.$inferSelect;
 export type Role = typeof role.$inferSelect;
 export type UserRole = typeof userRole.$inferSelect;
@@ -172,3 +185,4 @@ export type PasswordResetToken = typeof passwordResetToken.$inferSelect;
 export type EmailChangeToken = typeof emailChangeToken.$inferSelect;
 export type EmailVerificationToken = typeof emailVerificationToken.$inferSelect;
 export type ActivityLog = typeof activityLog.$inferSelect;
+export type ConfigVariable = typeof configVariable.$inferSelect;

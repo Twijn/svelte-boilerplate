@@ -2,6 +2,7 @@ import { db } from './db';
 import * as table from './db/schema';
 import { eq } from 'drizzle-orm';
 import { ActivityLogService, ActivityCategory, ActivityActions, LogSeverity } from './activity-log';
+import { getConfig } from './config';
 
 export interface RateLimitConfig {
 	maxAttempts: number;
@@ -9,27 +10,42 @@ export interface RateLimitConfig {
 	blockDurationMs?: number; // Optional: how long to block after exceeding limit
 }
 
-export const RATE_LIMIT_CONFIGS: Record<string, RateLimitConfig> = {
-	login: {
-		maxAttempts: 20, // Increased - let account lockout handle per-user security
-		windowMs: 15 * 60 * 1000, // 15 minutes
-		blockDurationMs: 15 * 60 * 1000 // Block for 15 minutes
-	},
-	register: {
-		maxAttempts: 3,
-		windowMs: 60 * 60 * 1000, // 1 hour
-		blockDurationMs: 60 * 60 * 1000 // Block for 1 hour
-	},
-	'password-reset': {
-		maxAttempts: 3,
-		windowMs: 60 * 60 * 1000, // 1 hour
-		blockDurationMs: 60 * 60 * 1000 // Block for 1 hour
-	},
-	'api-general': {
-		maxAttempts: 100,
-		windowMs: 60 * 1000 // 1 minute
+/**
+ * Get rate limit configuration for a specific action
+ * Loads values from the database-backed config system
+ */
+async function getRateLimitConfig(action: string): Promise<RateLimitConfig> {
+	switch (action) {
+		case 'login':
+			return {
+				maxAttempts: await getConfig<number>('rate_limit.login.max_attempts'),
+				windowMs: (await getConfig<number>('rate_limit.login.window_minutes')) * 60 * 1000,
+				blockDurationMs:
+					(await getConfig<number>('rate_limit.login.block_duration_minutes')) * 60 * 1000
+			};
+		case 'register':
+			return {
+				maxAttempts: await getConfig<number>('rate_limit.register.max_attempts'),
+				windowMs: (await getConfig<number>('rate_limit.register.window_minutes')) * 60 * 1000,
+				blockDurationMs:
+					(await getConfig<number>('rate_limit.register.block_duration_minutes')) * 60 * 1000
+			};
+		case 'password-reset':
+			return {
+				maxAttempts: await getConfig<number>('rate_limit.password_reset.max_attempts'),
+				windowMs: (await getConfig<number>('rate_limit.password_reset.window_minutes')) * 60 * 1000,
+				blockDurationMs:
+					(await getConfig<number>('rate_limit.password_reset.block_duration_minutes')) * 60 * 1000
+			};
+		case 'api-general':
+			return {
+				maxAttempts: await getConfig<number>('rate_limit.api_general.max_attempts'),
+				windowMs: (await getConfig<number>('rate_limit.api_general.window_minutes')) * 60 * 1000
+			};
+		default:
+			throw new Error(`No rate limit configuration found for action: ${action}`);
 	}
-};
+}
 
 export class RateLimitService {
 	/**
@@ -39,10 +55,7 @@ export class RateLimitService {
 		identifier: string,
 		action: string
 	): Promise<{ allowed: boolean; retryAfter?: number; attemptsRemaining?: number }> {
-		const config = RATE_LIMIT_CONFIGS[action];
-		if (!config) {
-			throw new Error(`No rate limit configuration found for action: ${action}`);
-		}
+		const config = await getRateLimitConfig(action);
 
 		const windowStart = new Date(Date.now() - config.windowMs);
 
@@ -157,14 +170,25 @@ export class RateLimitService {
 	}
 }
 
-// Account lockout constants
-export const ACCOUNT_LOCKOUT_CONFIG = {
-	maxFailedAttempts: 5,
-	lockoutDurationMs: 5 * 60 * 1000, // 5 minutes (reduced from 30)
-	resetAttemptsAfterMs: 10 * 60 * 1000 // Reset counter after 10 minutes of no attempts
-};
-
 export class AccountLockoutService {
+	/**
+	 * Get account lockout configuration from the config system
+	 */
+	private static async getAccountLockoutConfig() {
+		const maxFailedAttempts = await getConfig<number>(
+			'security.account_lockout.max_failed_attempts'
+		);
+		const lockoutDurationMinutes = await getConfig<number>(
+			'security.account_lockout.duration_minutes'
+		);
+
+		return {
+			maxFailedAttempts,
+			lockoutDurationMs: lockoutDurationMinutes * 60 * 1000,
+			resetAttemptsAfterMs: lockoutDurationMinutes * 2 * 60 * 1000 // Reset after 2x lockout duration
+		};
+	}
+
 	/**
 	 * Check if an account is locked
 	 */
@@ -215,6 +239,7 @@ export class AccountLockoutService {
 		attemptsRemaining: number;
 		lockedUntil?: Date;
 	}> {
+		const config = await this.getAccountLockoutConfig();
 		const user = await db.select().from(table.user).where(eq(table.user.id, userId)).limit(1);
 
 		if (user.length === 0) {
@@ -226,18 +251,15 @@ export class AccountLockoutService {
 		const lastFailed = userData.lastFailedLogin;
 
 		// Reset counter if last attempt was too long ago
-		if (
-			lastFailed &&
-			Date.now() - lastFailed.getTime() > ACCOUNT_LOCKOUT_CONFIG.resetAttemptsAfterMs
-		) {
+		if (lastFailed && Date.now() - lastFailed.getTime() > config.resetAttemptsAfterMs) {
 			failedAttempts = 0;
 		}
 
 		failedAttempts++;
 
 		// Check if we should lock the account
-		if (failedAttempts >= ACCOUNT_LOCKOUT_CONFIG.maxFailedAttempts) {
-			const lockedUntil = new Date(Date.now() + ACCOUNT_LOCKOUT_CONFIG.lockoutDurationMs);
+		if (failedAttempts >= config.maxFailedAttempts) {
+			const lockedUntil = new Date(Date.now() + config.lockoutDurationMs);
 
 			await db
 				.update(table.user)
@@ -268,7 +290,7 @@ export class AccountLockoutService {
 
 		return {
 			locked: false,
-			attemptsRemaining: ACCOUNT_LOCKOUT_CONFIG.maxFailedAttempts - failedAttempts
+			attemptsRemaining: config.maxFailedAttempts - failedAttempts
 		};
 	}
 
@@ -311,7 +333,8 @@ export class AccountLockoutService {
 		};
 
 		if (!permanent) {
-			updateData.lockedUntil = new Date(Date.now() + ACCOUNT_LOCKOUT_CONFIG.lockoutDurationMs);
+			const config = await this.getAccountLockoutConfig();
+			updateData.lockedUntil = new Date(Date.now() + config.lockoutDurationMs);
 		} else {
 			updateData.lockedUntil = null; // null means permanent
 		}

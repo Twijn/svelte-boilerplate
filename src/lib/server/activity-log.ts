@@ -65,6 +65,10 @@ export const ActivityActions = {
 	ACCOUNT_LOCKED: 'security.account.locked',
 	SUSPICIOUS_ACTIVITY: 'security.suspicious',
 
+	// Configuration
+	CONFIG_VIEW: 'config.view',
+	CONFIG_UPDATE: 'config.update',
+
 	// System
 	SYSTEM_START: 'system.start',
 	SYSTEM_ERROR: 'system.error',

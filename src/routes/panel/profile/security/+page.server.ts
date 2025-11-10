@@ -30,8 +30,8 @@ export const load: PageServerLoad = async ({ parent, url }) => {
 		const uri = generateTOTPUri(user.twoFactorSecret, user.email);
 		const qrCode = await generateQRCode(uri);
 
-		// Generate backup codes (plain text for display)
-		const backupCodes = generateBackupCodes(10);
+		// Generate backup codes (uses config for count)
+		const backupCodes = await generateBackupCodes();
 
 		return {
 			user,
@@ -186,16 +186,14 @@ export const actions: Actions = {
 					hashedBackupCodes = await hashBackupCodes(backupCodes);
 				} catch {
 					// Generate new backup codes if parsing fails
-					const backupCodes = generateBackupCodes(10);
+					const backupCodes = await generateBackupCodes();
 					hashedBackupCodes = await hashBackupCodes(backupCodes);
 				}
 			} else {
-				// Generate backup codes
-				const backupCodes = generateBackupCodes(10);
+				// Generate backup codes (uses config for count)
+				const backupCodes = await generateBackupCodes();
 				hashedBackupCodes = await hashBackupCodes(backupCodes);
-			}
-
-			// Enable 2FA
+			} // Enable 2FA
 			await db
 				.update(table.user)
 				.set({

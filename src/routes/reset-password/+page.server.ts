@@ -1,6 +1,6 @@
 import { fail, redirect } from '@sveltejs/kit';
 import { hash } from '@node-rs/argon2';
-import { validatePassword } from '$lib/server/auth';
+import { validatePassword, validatePasswordRequirements } from '$lib/server/auth';
 import {
 	validatePasswordResetToken,
 	deletePasswordResetToken,
@@ -62,6 +62,14 @@ export const actions: Actions = {
 		if (!validatePassword(password)) {
 			return fail(400, {
 				error: 'Password must be at least 6 characters long'
+			});
+		}
+
+		// Validate password against security requirements
+		const passwordError = await validatePasswordRequirements(password);
+		if (passwordError) {
+			return fail(400, {
+				error: passwordError
 			});
 		}
 

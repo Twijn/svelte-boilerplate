@@ -16,6 +16,18 @@ CREATE TABLE "activity_log" (
 	"duration" text
 );
 --> statement-breakpoint
+CREATE TABLE "config_variable" (
+	"key" text PRIMARY KEY NOT NULL,
+	"value" text NOT NULL,
+	"type" text NOT NULL,
+	"category" text NOT NULL,
+	"description" text,
+	"default_value" text NOT NULL,
+	"is_editable" boolean DEFAULT true NOT NULL,
+	"updated_at" timestamp with time zone DEFAULT now() NOT NULL,
+	"updated_by" text
+);
+--> statement-breakpoint
 CREATE TABLE "email_change_token" (
 	"id" text PRIMARY KEY NOT NULL,
 	"user_id" text NOT NULL,
@@ -117,6 +129,7 @@ CREATE TABLE "user_role" (
 );
 --> statement-breakpoint
 ALTER TABLE "activity_log" ADD CONSTRAINT "activity_log_user_id_user_id_fk" FOREIGN KEY ("user_id") REFERENCES "public"."user"("id") ON DELETE set null ON UPDATE no action;--> statement-breakpoint
+ALTER TABLE "config_variable" ADD CONSTRAINT "config_variable_updated_by_user_id_fk" FOREIGN KEY ("updated_by") REFERENCES "public"."user"("id") ON DELETE set null ON UPDATE no action;--> statement-breakpoint
 ALTER TABLE "email_change_token" ADD CONSTRAINT "email_change_token_user_id_user_id_fk" FOREIGN KEY ("user_id") REFERENCES "public"."user"("id") ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
 ALTER TABLE "email_verification_token" ADD CONSTRAINT "email_verification_token_user_id_user_id_fk" FOREIGN KEY ("user_id") REFERENCES "public"."user"("id") ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
 ALTER TABLE "password_reset_token" ADD CONSTRAINT "password_reset_token_user_id_user_id_fk" FOREIGN KEY ("user_id") REFERENCES "public"."user"("id") ON DELETE cascade ON UPDATE no action;--> statement-breakpoint

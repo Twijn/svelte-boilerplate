@@ -4,6 +4,7 @@ import { sha256 } from '@oslojs/crypto/sha2';
 import { encodeBase32LowerCase, encodeBase64url, encodeHexLowerCase } from '@oslojs/encoding';
 import { db } from '$lib/server/db';
 import * as table from '$lib/server/db/schema';
+import { getConfig } from '$lib/server/config';
 
 const DAY_IN_MS = 1000 * 60 * 60 * 24;
 
@@ -17,10 +18,11 @@ export function generateSessionToken() {
 
 export async function createSession(token: string, userId: string) {
 	const sessionId = encodeHexLowerCase(sha256(new TextEncoder().encode(token)));
+	const lifetimeDays = await getConfig<number>('security.session.lifetime_days');
 	const session: table.Session = {
 		id: sessionId,
 		userId,
-		expiresAt: new Date(Date.now() + DAY_IN_MS * 30)
+		expiresAt: new Date(Date.now() + DAY_IN_MS * lifetimeDays)
 	};
 	await db.insert(table.session).values(session);
 	return session;
@@ -62,9 +64,11 @@ export async function validateSessionToken(token: string) {
 		return { session: null, user: null };
 	}
 
-	const renewSession = Date.now() >= session.expiresAt.getTime() - DAY_IN_MS * 15;
+	const lifetimeDays = await getConfig<number>('security.session.lifetime_days');
+	const renewalThresholdDays = await getConfig<number>('security.session.renewal_threshold_days');
+	const renewSession = Date.now() >= session.expiresAt.getTime() - DAY_IN_MS * renewalThresholdDays;
 	if (renewSession) {
-		session.expiresAt = new Date(Date.now() + DAY_IN_MS * 30);
+		session.expiresAt = new Date(Date.now() + DAY_IN_MS * lifetimeDays);
 		await db
 			.update(table.session)
 			.set({ expiresAt: session.expiresAt })
@@ -128,6 +132,44 @@ export function validateUsername(username: unknown): username is string {
 
 export function validatePassword(password: unknown): password is string {
 	return typeof password === 'string' && password.length >= 6 && password.length <= 255;
+}
+
+/**
+ * Validate password against configured security requirements
+ * Returns an error message if invalid, or null if valid
+ */
+export async function validatePasswordRequirements(password: string): Promise<string | null> {
+	const minLength = await getConfig<number>('security.password.min_length');
+	const requireUppercase = await getConfig<boolean>('security.password.require_uppercase');
+	const requireLowercase = await getConfig<boolean>('security.password.require_lowercase');
+	const requireNumber = await getConfig<boolean>('security.password.require_number');
+	const requireSpecial = await getConfig<boolean>('security.password.require_special');
+
+	if (password.length < minLength) {
+		return `Password must be at least ${minLength} characters long`;
+	}
+
+	if (password.length > 255) {
+		return 'Password cannot exceed 255 characters';
+	}
+
+	if (requireUppercase && !/[A-Z]/.test(password)) {
+		return 'Password must contain at least one uppercase letter';
+	}
+
+	if (requireLowercase && !/[a-z]/.test(password)) {
+		return 'Password must contain at least one lowercase letter';
+	}
+
+	if (requireNumber && !/[0-9]/.test(password)) {
+		return 'Password must contain at least one number';
+	}
+
+	if (requireSpecial && !/[!@#$%^&*()_+\-=[\]{};':"\\|,.<>/?]/.test(password)) {
+		return 'Password must contain at least one special character';
+	}
+
+	return null;
 }
 
 export function validateEmail(email: unknown): email is string {

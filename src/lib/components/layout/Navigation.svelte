@@ -8,7 +8,8 @@
 		faUserCog,
 		faShieldAlt,
 		faKey,
-		faTimeline
+		faTimeline,
+		faU
 	} from '@fortawesome/free-solid-svg-icons';
 	import { PERMISSIONS } from '$lib/constants/permissions';
 
@@ -62,6 +63,12 @@
 					name: 'Activity Logs',
 					href: '/panel/admin/activity',
 					requiredPermissions: [PERMISSIONS.VIEW_LOGS]
+				},
+				{
+					icon: faUserCog,
+					name: 'Configuration',
+					href: '/panel/admin/config',
+					requiredPermissions: [PERMISSIONS.VIEW_CONFIG, PERMISSIONS.ADMIN]
 				}
 			]
 		},

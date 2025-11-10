@@ -9,6 +9,7 @@ import {
 	validateFirstOrLastName,
 	validateUsername,
 	validatePassword,
+	validatePasswordRequirements,
 	validateEmail
 } from '$lib/server/auth';
 import { hash } from '@node-rs/argon2';
@@ -234,6 +235,12 @@ export const actions = {
 
 		if (!validatePassword(password)) {
 			return fail(400, { message: 'Password must be at least 6 characters long.' });
+		}
+
+		// Validate password against security requirements
+		const passwordError = await validatePasswordRequirements(password);
+		if (passwordError) {
+			return fail(400, { message: passwordError });
 		}
 
 		try {

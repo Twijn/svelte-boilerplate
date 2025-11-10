@@ -62,6 +62,13 @@ export const actions = {
 		if (!auth.validatePassword(password)) {
 			return exit('Invalid password (min 6, max 255 characters)');
 		}
+
+		// Validate password against security requirements
+		const passwordError = await auth.validatePasswordRequirements(password);
+		if (passwordError) {
+			return exit(passwordError);
+		}
+
 		if (!auth.validateFirstOrLastName(firstName)) {
 			return exit(
 				'Invalid first name. Make sure it is between 1 and 50 characters long and contains only letters, apostrophes, and hyphens.'

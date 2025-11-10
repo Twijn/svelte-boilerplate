@@ -1,7 +1,8 @@
 import { Secret, TOTP } from 'otpauth';
 import QRCode from 'qrcode';
-import { hash, verify } from '@node-rs/argon2';
 import { randomBytes } from 'crypto';
+import { hash, verify } from '@node-rs/argon2';
+import { getConfig } from '$lib/server/config';
 import { APP_NAME } from '$lib/consts';
 
 /**
@@ -75,7 +76,12 @@ export function verifyTOTP(token: string, secret: string, window: number = 2): b
  * Generate backup codes for 2FA recovery
  * Returns an array of plain text backup codes
  */
-export function generateBackupCodes(count: number = 10): string[] {
+export async function generateBackupCodes(count?: number): Promise<string[]> {
+	// Get count from config if not provided
+	if (count === undefined) {
+		count = await getConfig<number>('security.2fa.backup_codes_count');
+	}
+
 	const codes: string[] = [];
 
 	for (let i = 0; i < count; i++) {

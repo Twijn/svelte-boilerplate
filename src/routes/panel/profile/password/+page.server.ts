@@ -4,7 +4,11 @@ import { db } from '$lib/server/db';
 import * as table from '$lib/server/db/schema';
 import { eq } from 'drizzle-orm';
 import { verify, hash } from '@node-rs/argon2';
-import { validatePassword, invalidateUserSessions } from '$lib/server/auth';
+import {
+	validatePassword,
+	validatePasswordRequirements,
+	invalidateUserSessions
+} from '$lib/server/auth';
 import { ActivityLogService, ActivityCategory, ActivityActions } from '$lib/server/activity-log';
 
 export const load: PageServerLoad = async ({ locals, url }) => {
@@ -44,6 +48,15 @@ export const actions: Actions = {
 		if (!validatePassword(newPassword)) {
 			return fail(400, {
 				message: 'New password must be at least 6 characters',
+				success: false
+			});
+		}
+
+		// Validate password against security requirements
+		const passwordError = await validatePasswordRequirements(newPassword);
+		if (passwordError) {
+			return fail(400, {
+				message: passwordError,
 				success: false
 			});
 		}

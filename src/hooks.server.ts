@@ -3,6 +3,10 @@ import { sequence } from '@sveltejs/kit/hooks';
 import * as auth from '$lib/server/auth';
 import { permissionHandle } from '$lib/server/permission-middleware';
 import { dev } from '$app/environment';
+import { initializeConfigSystem } from '$lib/server/config';
+
+// Initialize configuration system on server startup
+initializeConfigSystem();
 
 const handleAuth: Handle = async ({ event, resolve }) => {
 	const sessionToken = event.cookies.get(auth.sessionCookieName);

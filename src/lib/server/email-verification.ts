@@ -5,6 +5,7 @@ import { hash } from '@node-rs/argon2';
 import { encodeBase32LowerCaseNoPadding } from '@oslojs/encoding';
 import { sendEmail } from '$lib/server/email';
 import { APP_NAME } from '$lib/consts';
+import { getConfig } from '$lib/server/config';
 
 /**
  * Generate a secure random token for email verification
@@ -40,9 +41,10 @@ export async function createEmailVerificationToken(userId: string): Promise<stri
 	const token = generateToken();
 	const tokenHash = await hashToken(token);
 
-	// Store in database (expires in 24 hours)
+	// Get token expiry from config (in hours)
+	const expiryHours = await getConfig<number>('email.verification.token_expiry_hours');
 	const expiresAt = new Date();
-	expiresAt.setHours(expiresAt.getHours() + 24);
+	expiresAt.setHours(expiresAt.getHours() + expiryHours);
 
 	await db.insert(table.emailVerificationToken).values({
 		id: crypto.randomUUID(),
