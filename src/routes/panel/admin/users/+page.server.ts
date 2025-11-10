@@ -19,6 +19,13 @@ import {
 	ActivityActions,
 	LogSeverity
 } from '$lib/server/activity-log';
+import {
+	getFileFromFormData,
+	isValidImageType,
+	isValidFileSize,
+	saveUploadedFile,
+	deleteUploadedFile
+} from '$lib/server/file-upload';
 
 export const load = async ({ locals }) => {
 	// Check if user has admin permission
@@ -32,6 +39,7 @@ export const load = async ({ locals }) => {
 			email: table.user.email,
 			firstName: table.user.firstName,
 			lastName: table.user.lastName,
+			avatar: table.user.avatar,
 			isLocked: table.user.isLocked,
 			lockedAt: table.user.lockedAt,
 			lockedUntil: table.user.lockedUntil,
@@ -399,6 +407,46 @@ export const actions = {
 				return fail(400, { message: 'Email address already exists' });
 			}
 
+			// Handle avatar upload/removal
+			let avatarUrl: string | null = existingUser[0].avatar || null;
+			const avatarFile = getFileFromFormData(formData, 'avatar');
+			const shouldRemoveAvatar = formData.get('removeAvatar') === 'true';
+
+			if (shouldRemoveAvatar) {
+				// Delete existing avatar if any
+				if (existingUser[0].avatar) {
+					await deleteUploadedFile(existingUser[0].avatar);
+				}
+				avatarUrl = null;
+			} else if (avatarFile) {
+				// Validate file
+				if (!isValidImageType(avatarFile)) {
+					return fail(400, {
+						message: 'Invalid file type. Only JPEG, PNG, GIF, and WebP images are allowed.'
+					});
+				}
+
+				if (!isValidFileSize(avatarFile)) {
+					return fail(400, { message: 'File size must not exceed 5MB.' });
+				}
+
+				// Delete old avatar if exists
+				if (existingUser[0].avatar) {
+					await deleteUploadedFile(existingUser[0].avatar);
+				}
+
+				// Upload new avatar
+				const uploadResult = await saveUploadedFile(avatarFile, 'avatars');
+
+				if (!uploadResult.success) {
+					return fail(500, {
+						message: uploadResult.error || 'Failed to upload avatar. Please try again.'
+					});
+				}
+
+				avatarUrl = uploadResult.url || null;
+			}
+
 			// Update user
 			await db
 				.update(table.user)
@@ -407,6 +455,7 @@ export const actions = {
 					email,
 					firstName,
 					lastName,
+					avatar: avatarUrl,
 					requirePasswordChange
 				})
 				.where(eq(table.user.id, userId));

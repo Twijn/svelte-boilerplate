@@ -34,7 +34,8 @@ export const load = async ({ locals }) => {
 							id: table.user.id,
 							username: table.user.username,
 							firstName: table.user.firstName,
-							lastName: table.user.lastName
+							lastName: table.user.lastName,
+							avatar: table.user.avatar
 						})
 						.from(table.user)
 						.where(eq(table.user.id, ur.userId))

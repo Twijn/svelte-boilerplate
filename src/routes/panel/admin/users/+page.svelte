@@ -4,6 +4,7 @@
 	import ConfirmModal from '$lib/components/ui/ConfirmModal.svelte';
 	import UserTable from '$lib/components/admin/UserTable.svelte';
 	import StatCard from '$lib/components/ui/StatCard.svelte';
+	import AvatarUpload from '$lib/components/ui/AvatarUpload.svelte';
 	import { enhance } from '$app/forms';
 	import { notifications } from '$lib/stores/notifications';
 	import Heading from '$lib/components/layout/Heading.svelte';
@@ -21,6 +22,7 @@
 		lastName: string;
 		username: string;
 		email: string;
+		avatar?: string | null;
 		requirePasswordChange: boolean;
 		roles: Array<{ id: string; name: string; isSystemRole: boolean }>;
 	};
@@ -46,6 +48,8 @@
 	let selectedRole = $state('');
 	let roleToRemove = $state<Role | null>(null);
 	let disableReason = $state('');
+	let selectedAvatarFile = $state<File | null>(null);
+	let removeAvatar = $state(false);
 
 	// Form state
 	let createForm = $state({
@@ -135,6 +139,8 @@
 		selectedUser = null;
 		roleToRemove = null;
 		disableReason = '';
+		selectedAvatarFile = null;
+		removeAvatar = false;
 	}
 
 	// Utility functions
@@ -399,16 +405,41 @@
 		<form
 			method="POST"
 			action="?/updateUser"
-			use:enhance={() => {
+			enctype="multipart/form-data"
+			use:enhance={({ formData }) => {
+				if (selectedAvatarFile) {
+					formData.set('avatar', selectedAvatarFile);
+				}
+				if (removeAvatar) {
+					formData.set('removeAvatar', 'true');
+				}
 				return async ({ result, update }) => {
 					await update();
 					if (result.type === 'success') {
+						selectedAvatarFile = null;
+						removeAvatar = false;
 						closeModals();
 					}
 				};
 			}}
 		>
 			<input type="hidden" name="userId" value={selectedUser.id} />
+
+			<div class="form-group">
+				<AvatarUpload
+					currentAvatar={selectedUser.avatar}
+					editable={true}
+					enableCrop={true}
+					onFileSelect={(file) => {
+						selectedAvatarFile = file;
+						removeAvatar = false;
+					}}
+					onDelete={() => {
+						selectedAvatarFile = null;
+						removeAvatar = true;
+					}}
+				/>
+			</div>
 
 			<div class="form-group">
 				<label for="edit-username">Username:</label>

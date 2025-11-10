@@ -1,6 +1,7 @@
 <script lang="ts">
 	import SortableTable from '$lib/components/ui/SortableTable.svelte';
 	import Button from '$lib/components/ui/Button.svelte';
+	import UserAvatar from '$lib/components/ui/UserAvatar.svelte';
 	import { FontAwesomeIcon } from '@fortawesome/svelte-fontawesome';
 	import {
 		faUserPlus,
@@ -23,6 +24,7 @@
 		email: string;
 		firstName: string;
 		lastName: string;
+		avatar?: string | null;
 		requirePasswordChange: boolean;
 		roles: Role[];
 		isLocked?: boolean;
@@ -134,9 +136,13 @@
 		{#snippet cellContent({ item: user, column })}
 			{#if column.label === 'User'}
 				<div class="user-cell">
-					<div class="user-avatar">
-						{user.firstName.charAt(0)}{user.lastName.charAt(0)}
-					</div>
+					<UserAvatar
+						avatar={user.avatar}
+						firstName={user.firstName}
+						lastName={user.lastName}
+						username={user.username}
+						size="medium"
+					/>
 					<div class="user-info">
 						<div class="user-name">{user.firstName} {user.lastName}</div>
 						<div class="user-username">@{user.username}</div>
@@ -280,20 +286,6 @@
 		display: flex;
 		align-items: center;
 		gap: 0.75rem;
-	}
-
-	.user-avatar {
-		width: 45px;
-		height: 45px;
-		border-radius: 50%;
-		background: linear-gradient(135deg, var(--theme-color-1), var(--theme-color-2));
-		display: flex;
-		align-items: center;
-		justify-content: center;
-		font-weight: 700;
-		font-size: 1rem;
-		color: white;
-		flex-shrink: 0;
 	}
 
 	.user-info {

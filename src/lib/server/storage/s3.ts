@@ -44,6 +44,8 @@ export class S3StorageAdapter implements StorageAdapter {
 				Key: path,
 				Body: file,
 				ContentType: options?.contentType || 'application/octet-stream',
+				// Set aggressive caching since files have unique names
+				CacheControl: 'public, max-age=31536000, immutable', // 1 year
 				...(options?.metadata && { Metadata: options.metadata })
 			};
 

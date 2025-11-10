@@ -1,5 +1,6 @@
 <script lang="ts">
 	import Button from '$lib/components/ui/Button.svelte';
+	import UserAvatar from '$lib/components/ui/UserAvatar.svelte';
 	import { FontAwesomeIcon } from '@fortawesome/svelte-fontawesome';
 	import {
 		faEdit,
@@ -26,6 +27,7 @@
 			username: string;
 			firstName: string;
 			lastName: string;
+			avatar?: string | null;
 		}>;
 	}
 
@@ -78,8 +80,14 @@
 			</h4>
 			<div class="users-list">
 				{#each role.users.slice(0, 3) as user (user.id)}
-					<div class="user-avatar" title="{user.firstName} {user.lastName}">
-						{user.firstName.charAt(0)}{user.lastName.charAt(0)}
+					<div title="{user.firstName} {user.lastName}">
+						<UserAvatar
+							avatar={user.avatar}
+							firstName={user.firstName}
+							lastName={user.lastName}
+							username={user.username}
+							size="small"
+						/>
 					</div>
 				{/each}
 				{#if role.users.length > 3}
@@ -176,20 +184,6 @@
 		display: flex;
 		align-items: center;
 		gap: 0.35rem;
-	}
-
-	.user-avatar {
-		width: 30px;
-		height: 30px;
-		border-radius: 50%;
-		background: linear-gradient(135deg, var(--theme-color-1), var(--theme-color-2));
-		display: flex;
-		align-items: center;
-		justify-content: center;
-		font-weight: 600;
-		font-size: 0.7rem;
-		color: white;
-		cursor: help;
 	}
 
 	.more-users {
