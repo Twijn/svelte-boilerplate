@@ -102,7 +102,8 @@ A production-ready SvelteKit boilerplate with comprehensive authentication, auth
 Comprehensive documentation is available in the [`docs/`](./docs/) folder:
 
 - **[📖 Documentation Index](./docs/README.md)** - Complete guide to all features
-- **[🔐 Password Reset Setup](./docs/PASSWORD_RESET_SETUP.md)** - Configure email functionality
+- **[� Deployment Guide](./docs/DEPLOYMENT.md)** - Deploy to Vercel, Netlify, Railway, Fly.io, VPS, and more
+- **[�🔐 Password Reset Setup](./docs/PASSWORD_RESET_SETUP.md)** - Configure email functionality
 - **[✉️ Email Verification](./docs/EMAIL_VERIFICATION.md)** - Enable email verification
 - **[🛡️ Rate Limiting](./docs/RATE_LIMITING.md)** - Configure rate limits and account lockout
 - **[👥 Permissions Guide](./docs/PERMISSIONS_GUIDE.md)** - Add and manage permissions
@@ -190,6 +191,17 @@ See [Password Reset Setup](./docs/PASSWORD_RESET_SETUP.md) for detailed email co
 
 ## 🚢 Deployment
 
+**See the comprehensive [Deployment Guide](./docs/DEPLOYMENT.md) for detailed instructions on deploying to:**
+
+- Vercel
+- Netlify
+- Docker
+- VPS/Ubuntu Server
+- Railway
+- Fly.io
+
+### Quick Deploy
+
 1. **Build the application:**
 
    ```sh
@@ -202,15 +214,10 @@ See [Password Reset Setup](./docs/PASSWORD_RESET_SETUP.md) for detailed email co
 
    ```sh
    pnpm db:push
-   ```
-
-4. **Seed initial data:**
-
-   ```sh
    pnpm db:seed
    ```
 
-5. **Start the server:**
+4. **Start the server:**
    ```sh
    node build
    ```
