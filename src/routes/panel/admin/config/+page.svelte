@@ -13,6 +13,9 @@
 	$effect(() => {
 		if (form?.success) {
 			notifications.success(form.message);
+			// Close edit mode after successful save
+			editingKey = null;
+			editValue = '';
 		} else if (form?.error) {
 			notifications.error(form.error);
 		}
@@ -233,14 +236,21 @@
 
 	.value-display {
 		font-family: var(--font-family-mono);
-		font-size: 0.9rem;
-		color: var(--text-color-1);
+		font-size: 0.95rem;
+		color: white;
+		background: rgba(var(--theme-color-rgb), 0.1);
+		border: 1px solid rgba(var(--theme-color-rgb), 0.3);
+		padding: 0.35rem 0.6rem;
+		border-radius: 4px;
+		display: inline-block;
+		font-weight: 500;
 	}
 
 	.default-value {
 		font-family: var(--font-family-mono);
 		font-size: 0.85rem;
 		color: var(--text-color-2);
+		opacity: 0.7;
 	}
 
 	.inline-form {

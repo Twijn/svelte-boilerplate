@@ -30,6 +30,10 @@ const configRegistry = new Map<string, ConfigVariableDefinition>();
  */
 export function registerConfig<T>(definition: ConfigVariableDefinition<T>): void {
 	if (configRegistry.has(definition.key)) {
+		// In development mode, HMR can cause re-registration - silently skip
+		if (process.env.NODE_ENV === 'development') {
+			return;
+		}
 		throw new Error(`Config variable "${definition.key}" is already registered`);
 	}
 	configRegistry.set(definition.key, definition as ConfigVariableDefinition);

@@ -739,6 +739,11 @@ section::before {
 	color: white;
 }
 
+.badge-warning {
+	background: linear-gradient(135deg, rgb(var(--orange)), rgba(var(--orange), 0.8));
+	color: white;
+}
+
 .badge-secondary {
 	background: linear-gradient(135deg, var(--background-color-2), #404040);
 	color: var(--text-color-1);
