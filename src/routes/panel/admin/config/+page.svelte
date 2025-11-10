@@ -12,14 +12,15 @@
 		faCloud,
 		faGauge,
 		faShieldAlt,
-		faServer
+		faServer,
+		type IconDefinition
 	} from '@fortawesome/free-solid-svg-icons';
 	import type { PageData, ActionData } from './$types';
 
 	let { data, form }: { data: PageData; form: ActionData } = $props();
 
 	// Category icons mapping
-	const categoryIcons: Record<string, any> = {
+	const categoryIcons: Record<string, IconDefinition> = {
 		app: faCog,
 		email: faEnvelope,
 		storage: faCloud,
@@ -120,7 +121,7 @@
 	];
 
 	// Add actions column conditionally
-	const displayColumns: any = data.canEdit
+	const displayColumns: unknown = data.canEdit
 		? [...columns, { key: 'isEditable', label: 'Actions', sortable: false }]
 		: columns;
 
@@ -158,11 +159,11 @@
 	<SearchInput bind:value={searchQuery} placeholder="Search configuration..." />
 
 	<Tabs {tabs} bind:activeTab={activeCategory} onTabChange={(id) => (activeCategory = id)}>
-		{#snippet content({ activeTab })}
+		{#snippet content()}
 			{#if filteredConfigs.length > 0}
 				<SortableTable
 					data={filteredConfigs}
-					columns={displayColumns}
+					columns={displayColumns as typeof columns}
 					rowKey={(config) => config.key}
 				>
 					{#snippet cellContent({ item: config, column })}

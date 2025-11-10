@@ -54,7 +54,7 @@
 		{#if suggestions.length > 0}
 			<div class="suggestions">
 				<ul>
-					{#each suggestions as suggestion}
+					{#each suggestions as suggestion (suggestion)}
 						<li>{suggestion}</li>
 					{/each}
 				</ul>

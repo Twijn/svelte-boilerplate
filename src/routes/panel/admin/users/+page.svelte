@@ -157,7 +157,7 @@
 	}
 
 	// Bulk action handlers
-	async function handleBulkDisable(users: User[], reason: string) {
+	async function handleBulkDisable(users: User[]) {
 		bulkSelectedUsers = users;
 		bulkDisableReason = '';
 		showBulkDisableModal = true;

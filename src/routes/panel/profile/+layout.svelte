@@ -77,7 +77,7 @@
 
 <div class="col-12">
 	<Tabs {tabs} {activeTab} onTabChange={handleTabChange}>
-		{#snippet content(params)}
+		{#snippet content()}
 			{@render children()}
 		{/snippet}
 	</Tabs>

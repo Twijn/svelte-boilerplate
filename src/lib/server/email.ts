@@ -25,17 +25,17 @@ function getTransporter() {
 	if (!transporter) {
 		if (!env.GMAIL_USER || !env.GMAIL_APP_PASSWORD) {
 			throw new Error(
-'Email configuration is missing. Please set GMAIL_USER and GMAIL_APP_PASSWORD'
-);
+				'Email configuration is missing. Please set GMAIL_USER and GMAIL_APP_PASSWORD'
+			);
 		}
 
 		transporter = nodemailer.createTransport({
-service: 'gmail',
-auth: {
-user: env.GMAIL_USER,
-pass: env.GMAIL_APP_PASSWORD
-}
-});
+			service: 'gmail',
+			auth: {
+				user: env.GMAIL_USER,
+				pass: env.GMAIL_APP_PASSWORD
+			}
+		});
 	}
 	return transporter;
 }
@@ -45,12 +45,12 @@ export async function sendEmail({ to, subject, html, text }: EmailOptions): Prom
 		const transport = getTransporter();
 
 		await transport.sendMail({
-from: `"${env.APP_NAME || 'App'}" <${env.GMAIL_FROM || env.GMAIL_USER}>`,
-to,
-subject,
-html,
-text: text || stripHtml(html)
-});
+			from: `"${env.APP_NAME || 'App'}" <${env.GMAIL_FROM || env.GMAIL_USER}>`,
+			to,
+			subject,
+			html,
+			text: text || stripHtml(html)
+		});
 
 		console.log(`Email sent successfully to ${to}`);
 	} catch (error) {
