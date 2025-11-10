@@ -11,6 +11,7 @@
 	import Prompt from '$lib/components/ui/dialogs/Prompt.svelte';
 	import Button from '$lib/components/ui/Button.svelte';
 	import VerificationBanner from '$lib/components/ui/VerificationBanner.svelte';
+	import UserAvatar from '$lib/components/ui/UserAvatar.svelte';
 
 	const { children, data } = $props();
 	const user = data.user;
@@ -59,6 +60,13 @@
 		<div class="header-right">
 			{#if user}
 				<div class="user-info">
+					<UserAvatar
+						avatar={user.avatar}
+						firstName={user.firstName}
+						lastName={user.lastName}
+						username={user.username}
+						size="small"
+					/>
 					<span class="user-name">Welcome, {user.firstName || user.username}!</span>
 					<Button href="/logout" variant="header" title="Sign out">Sign Out</Button>
 				</div>
@@ -131,7 +139,7 @@
 	.user-info {
 		display: flex;
 		align-items: center;
-		gap: 1rem;
+		gap: 0.75rem;
 	}
 
 	.user-name {
