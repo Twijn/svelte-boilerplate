@@ -2,10 +2,9 @@
 	import Heading from '$lib/components/layout/Heading.svelte';
 	import Section from '$lib/components/ui/Section.svelte';
 	import Button from '$lib/components/ui/Button.svelte';
+	import SortableTable from '$lib/components/ui/SortableTable.svelte';
 	import { enhance } from '$app/forms';
 	import { notifications } from '$lib/stores/notifications';
-	import { FontAwesomeIcon } from '@fortawesome/svelte-fontawesome';
-	import { faSort, faSortUp, faSortDown } from '@fortawesome/free-solid-svg-icons';
 	import type { PageData, ActionData } from './$types';
 
 	let { data, form }: { data: PageData; form: ActionData } = $props();
@@ -23,91 +22,71 @@
 	let editValue = $state<string | number | boolean>('');
 	let searchQuery = $state('');
 
-	type SortColumn = 'key' | 'value' | 'default' | null;
-	type SortDirection = 'asc' | 'desc' | null;
-	let sortColumn = $state<SortColumn>(null);
-	let sortDirection = $state<SortDirection>(null);
-
-	const categories = $derived(Object.keys(data.grouped).sort());
-
-	// Filter configs based on search
-	const filteredGrouped = $derived.by(() => {
-		if (!searchQuery.trim()) return data.grouped;
-
-		const query = searchQuery.toLowerCase();
-		const filtered: typeof data.grouped = {};
+	// Flatten configs with category information for the table
+	const flatConfigs = $derived.by(() => {
+		const flat: Array<(typeof data.configs)[number] & { category: string; categoryLabel: string }> =
+			[];
 
 		for (const [category, configs] of Object.entries(data.grouped)) {
-			const matchingConfigs = configs.filter(
-				(c) =>
-					c.key.toLowerCase().includes(query) ||
-					c.description?.toLowerCase().includes(query) ||
-					category.toLowerCase().includes(query)
-			);
-
-			if (matchingConfigs.length > 0) {
-				filtered[category] = matchingConfigs;
+			for (const config of configs) {
+				flat.push({
+					...config,
+					category,
+					categoryLabel: getCategoryLabel(category)
+				});
 			}
 		}
 
-		return filtered;
+		return flat;
 	});
 
-	// Sort configs within each category
-	const sortedGrouped = $derived.by(() => {
-		if (!sortColumn || !sortDirection) return filteredGrouped;
+	// Filter configs based on search
+	const filteredConfigs = $derived.by(() => {
+		if (!searchQuery.trim()) return flatConfigs;
 
-		const sorted: typeof filteredGrouped = {};
-
-		for (const [category, configs] of Object.entries(filteredGrouped)) {
-			const sortedConfigs = [...configs].sort((a, b) => {
-				let aVal: any;
-				let bVal: any;
-
-				if (sortColumn === 'key') {
-					aVal = a.key;
-					bVal = b.key;
-				} else if (sortColumn === 'value') {
-					aVal = String(a.value);
-					bVal = String(b.value);
-				} else if (sortColumn === 'default') {
-					aVal = String(a.defaultValue);
-					bVal = String(b.defaultValue);
-				}
-
-				if (typeof aVal === 'string' && typeof bVal === 'string') {
-					const comparison = aVal.localeCompare(bVal);
-					return sortDirection === 'desc' ? -comparison : comparison;
-				}
-
-				return 0;
-			});
-
-			sorted[category] = sortedConfigs;
-		}
-
-		return sorted;
+		const query = searchQuery.toLowerCase();
+		return flatConfigs.filter(
+			(c) =>
+				c.key.toLowerCase().includes(query) ||
+				c.description?.toLowerCase().includes(query) ||
+				c.category.toLowerCase().includes(query)
+		);
 	});
 
-	function handleSort(column: SortColumn) {
-		if (sortColumn === column) {
-			// Cycle: asc -> desc -> null
-			if (sortDirection === 'asc') {
-				sortDirection = 'desc';
-			} else if (sortDirection === 'desc') {
-				sortDirection = null;
-				sortColumn = null;
+	// Group filtered configs by category for table rendering
+	const groupedForTable = $derived.by(() => {
+		const grouped: Record<string, typeof filteredConfigs> = {};
+		for (const config of filteredConfigs) {
+			if (!grouped[config.category]) {
+				grouped[config.category] = [];
 			}
-		} else {
-			sortColumn = column;
-			sortDirection = 'asc';
+			grouped[config.category].push(config);
 		}
-	}
+		return grouped;
+	});
 
-	function getSortIcon(column: SortColumn) {
-		if (sortColumn !== column) return faSort;
-		return sortDirection === 'asc' ? faSortUp : faSortDown;
-	}
+	const columns = [
+		{
+			key: 'key' as const,
+			label: 'Setting',
+			sortValue: (item: (typeof flatConfigs)[number]) => item.key
+		},
+		{
+			key: 'value' as const,
+			label: 'Current Value',
+			sortValue: (item: (typeof flatConfigs)[number]) => String(item.value)
+		},
+		{
+			key: 'defaultValue' as const,
+			label: 'Default',
+			sortValue: (item: (typeof flatConfigs)[number]) => String(item.defaultValue)
+		}
+	];
+
+	// Add actions column conditionally
+	const displayColumns = data.canEdit
+		? [...columns, { key: 'key' as const, label: 'Actions', sortable: false, class: 'actions-col' }]
+		: columns;
 
 	function startEdit(key: string, value: unknown) {
 		editingKey = key;
@@ -147,133 +126,64 @@
 		class="search-input"
 	/>
 
-	{#if Object.keys(filteredGrouped).length > 0}
-		<div class="table-container">
-			<table>
-				<thead>
-					<tr>
-						<th
-							class="sortable"
-							class:sorted={sortColumn === 'key'}
-							onclick={() => handleSort('key')}
-						>
-							<span class="th-content">
-								<span>Setting</span>
-								<span class="sort-icon">
-									<FontAwesomeIcon icon={getSortIcon('key')} />
-								</span>
-							</span>
-						</th>
-						<th
-							class="sortable"
-							class:sorted={sortColumn === 'value'}
-							onclick={() => handleSort('value')}
-						>
-							<span class="th-content">
-								<span>Current Value</span>
-								<span class="sort-icon">
-									<FontAwesomeIcon icon={getSortIcon('value')} />
-								</span>
-							</span>
-						</th>
-						<th
-							class="sortable"
-							class:sorted={sortColumn === 'default'}
-							onclick={() => handleSort('default')}
-						>
-							<span class="th-content">
-								<span>Default</span>
-								<span class="sort-icon">
-									<FontAwesomeIcon icon={getSortIcon('default')} />
-								</span>
-							</span>
-						</th>
-						{#if data.canEdit}
-							<th class="actions-col">Actions</th>
+	{#if filteredConfigs.length > 0}
+		<SortableTable data={filteredConfigs} columns={displayColumns} rowKey={(config) => config.key}>
+			{#snippet cellContent({ item: config, column })}
+				{#if column.key === 'key' && column.label === 'Setting'}
+					<div class="setting-info">
+						<code class="config-key">{config.key}</code>
+						{#if !config.isDefault}
+							<span class="badge badge-warning">Modified</span>
 						{/if}
-					</tr>
-				</thead>
-				<tbody>
-					{#each categories as category, categoryIndex}
-						{@const configs = sortedGrouped[category]}
-						{#if configs && configs.length > 0}
-							<tr class="category-divider">
-								<td colspan={data.canEdit ? 4 : 3}>
-									<strong>{getCategoryLabel(category)}</strong>
-								</td>
-							</tr>
-							{#each configs as config (config.key)}
-								<tr>
-									<td>
-										<div class="setting-info">
-											<code class="config-key">{config.key}</code>
-											{#if !config.isDefault}
-												<span class="badge badge-warning">Modified</span>
-											{/if}
-											{#if config.description}
-												<div class="setting-desc">{config.description}</div>
-											{/if}
-											<small>Type: {config.type}</small>
-										</div>
-									</td>
-									<td>
-										{#if editingKey === config.key}
-											<form method="POST" action="?/update" use:enhance class="inline-form">
-												<input type="hidden" name="key" value={config.key} />
-												<input type="hidden" name="type" value={config.type} />
-
-												{#if config.type === 'boolean'}
-													<select name="value" bind:value={editValue}>
-														<option value="true">Enabled</option>
-														<option value="false">Disabled</option>
-													</select>
-												{:else if config.type === 'number'}
-													<input type="number" name="value" bind:value={editValue} required />
-												{:else if config.type === 'json'}
-													<textarea name="value" bind:value={editValue} rows="3" required
-													></textarea>
-												{:else}
-													<input type="text" name="value" bind:value={editValue} required />
-												{/if}
-
-												<div class="inline-actions">
-													<Button type="submit">Save</Button>
-													<Button type="button" onClick={cancelEdit} variant="secondary"
-														>Cancel</Button
-													>
-												</div>
-											</form>
-										{:else}
-											<code class="value-display">{formatValue(config.value, config.type)}</code>
-										{/if}
-									</td>
-									<td>
-										<code class="default-value"
-											>{formatValue(config.defaultValue, config.type)}</code
-										>
-									</td>
-									{#if data.canEdit}
-										<td class="actions-col">
-											{#if config.isEditable && editingKey !== config.key}
-												<div class="action-buttons">
-													<Button onClick={() => startEdit(config.key, config.value)}>Edit</Button>
-													{#if !config.isDefault}
-														<form method="POST" action="?/reset" use:enhance>
-															<input type="hidden" name="key" value={config.key} />
-															<Button type="submit" variant="secondary">Reset</Button>
-														</form>
-													{/if}
-												</div>
-											{/if}
-										</td>
-									{/if}
-								</tr>
-							{/each}
+						{#if config.description}
+							<div class="setting-desc">{config.description}</div>
 						{/if}
-					{/each}
-				</tbody>
-			</table>
-		</div>
+						<small>Type: {config.type}</small>
+					</div>
+				{:else if column.key === 'value'}
+					{#if editingKey === config.key}
+						<form method="POST" action="?/update" use:enhance class="inline-form">
+							<input type="hidden" name="key" value={config.key} />
+							<input type="hidden" name="type" value={config.type} />
+
+							{#if config.type === 'boolean'}
+								<select name="value" bind:value={editValue}>
+									<option value="true">Enabled</option>
+									<option value="false">Disabled</option>
+								</select>
+							{:else if config.type === 'number'}
+								<input type="number" name="value" bind:value={editValue} required />
+							{:else if config.type === 'json'}
+								<textarea name="value" bind:value={editValue} rows="3" required></textarea>
+							{:else}
+								<input type="text" name="value" bind:value={editValue} required />
+							{/if}
+
+							<div class="inline-actions">
+								<Button type="submit">Save</Button>
+								<Button type="button" onClick={cancelEdit} variant="secondary">Cancel</Button>
+							</div>
+						</form>
+					{:else}
+						<code class="value-display">{formatValue(config.value, config.type)}</code>
+					{/if}
+				{:else if column.key === 'defaultValue'}
+					<code class="default-value">{formatValue(config.defaultValue, config.type)}</code>
+				{:else if column.label === 'Actions' && data.canEdit}
+					{#if config.isEditable && editingKey !== config.key}
+						<div class="action-buttons">
+							<Button onClick={() => startEdit(config.key, config.value)}>Edit</Button>
+							{#if !config.isDefault}
+								<form method="POST" action="?/reset" use:enhance>
+									<input type="hidden" name="key" value={config.key} />
+									<Button type="submit" variant="secondary">Reset</Button>
+								</form>
+							{/if}
+						</div>
+					{/if}
+				{/if}
+			{/snippet}
+		</SortableTable>
 	{:else}
 		<div class="empty-state">
 			<p>No configuration variables found matching "{searchQuery}"</p>
@@ -299,22 +209,6 @@
 		border-color: var(--theme-color-2);
 	}
 
-	.category-divider {
-		background: linear-gradient(
-			135deg,
-			rgba(var(--theme-color-rgb), 0.15),
-			rgba(var(--theme-color-rgb), 0.08)
-		);
-		border-top: 2px solid rgba(var(--theme-color-rgb), 0.3);
-	}
-
-	.category-divider td {
-		padding: 0.75rem 1rem;
-		color: var(--theme-color-2);
-		font-size: 1.1rem;
-		letter-spacing: 0.025em;
-	}
-
 	.setting-info {
 		display: flex;
 		flex-direction: column;
@@ -324,7 +218,7 @@
 	.config-key {
 		font-family: var(--font-family-mono);
 		font-size: 0.9rem;
-		color: var(--theme-color-2);
+		color: white;
 		background: rgba(255, 255, 255, 0.05);
 		padding: 0.2rem 0.5rem;
 		border-radius: 4px;
@@ -376,11 +270,6 @@
 		gap: 0.5rem;
 	}
 
-	.actions-col {
-		width: 150px;
-		text-align: right;
-	}
-
 	.action-buttons {
 		display: flex;
 		gap: 0.5rem;
@@ -391,45 +280,5 @@
 		text-align: center;
 		padding: 3rem;
 		color: var(--text-color-2);
-	}
-
-	th.sortable {
-		cursor: pointer;
-		user-select: none;
-		transition: background-color 0.15s ease;
-	}
-
-	th.sortable:hover {
-		background: rgba(255, 255, 255, 0.05);
-	}
-
-	th.sorted {
-		background: rgba(var(--theme-color-rgb), 0.1);
-		color: var(--theme-color-2);
-	}
-
-	.th-content {
-		display: flex;
-		align-items: center;
-		justify-content: space-between;
-		gap: 0.5rem;
-	}
-
-	.sort-icon {
-		opacity: 0.5;
-		font-size: 0.85em;
-		min-width: 0.85em;
-		display: flex;
-		align-items: center;
-		transition: opacity 0.15s ease;
-	}
-
-	th.sortable:hover .sort-icon,
-	th.sorted .sort-icon {
-		opacity: 1;
-	}
-
-	th.sorted .sort-icon {
-		color: var(--theme-color-2);
 	}
 </style>

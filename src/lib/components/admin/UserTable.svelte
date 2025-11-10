@@ -1,4 +1,5 @@
 <script lang="ts">
+	import SortableTable from '$lib/components/ui/SortableTable.svelte';
 	import Button from '$lib/components/ui/Button.svelte';
 	import { FontAwesomeIcon } from '@fortawesome/svelte-fontawesome';
 	import {
@@ -95,155 +96,172 @@
 		}
 		return roleColors.default;
 	}
+
+	// Custom sort function for status - prioritizes disabled > locked > requirePasswordChange > active
+	function getStatusSortValue(user: User): number {
+		if (user.isDisabled) return 0;
+		if (user.isLocked) return 1;
+		if (user.requirePasswordChange) return 2;
+		return 3;
+	}
+
+	const columns = [
+		{
+			key: 'username' as keyof User,
+			label: 'User',
+			sortValue: (user: User) => `${user.firstName} ${user.lastName}`.toLowerCase()
+		},
+		{
+			key: 'isDisabled' as keyof User,
+			label: 'Status',
+			sortValue: getStatusSortValue
+		},
+		{
+			key: 'roles' as keyof User,
+			label: 'Roles',
+			sortValue: (user: User) => user.roles.length
+		},
+		{
+			key: 'id' as keyof User,
+			label: 'Actions',
+			sortable: false
+		}
+	];
 </script>
 
 <div class="table-container col-12">
-	<table>
-		<thead>
-			<tr>
-				<th>User</th>
-				<th>Status</th>
-				<th>Roles</th>
-				<th class="actions-column">Actions</th>
-			</tr>
-		</thead>
-		<tbody>
-			{#each users as user (user.id)}
-				<tr class="user-row">
-					<td class="user-cell">
-						<div class="user-avatar">
-							{user.firstName.charAt(0)}{user.lastName.charAt(0)}
+	<SortableTable data={users} {columns} rowKey={(user) => user.id} rowClass={() => 'user-row'}>
+		{#snippet cellContent({ item: user, column })}
+			{#if column.label === 'User'}
+				<div class="user-cell">
+					<div class="user-avatar">
+						{user.firstName.charAt(0)}{user.lastName.charAt(0)}
+					</div>
+					<div class="user-info">
+						<div class="user-name">{user.firstName} {user.lastName}</div>
+						<div class="user-username">@{user.username}</div>
+						<div class="user-email">{user.email}</div>
+					</div>
+				</div>
+			{:else if column.label === 'Status'}
+				<div class="status-cell">
+					{#if user.isDisabled}
+						<button
+							class="status-badge disabled clickable"
+							onclick={() => onEnable?.(user)}
+							disabled={!onEnable}
+							title={onEnable
+								? `Disabled: ${user.disableReason || 'No reason given'}. Click to enable.`
+								: 'Cannot enable'}
+						>
+							<FontAwesomeIcon icon={faLock} />
+							<span>Disabled</span>
+						</button>
+					{:else if user.isLocked}
+						{@const isTemporary = user.lockedUntil && new Date(user.lockedUntil) > new Date()}
+						{@const isPermanent = user.isLocked && !user.lockedUntil}
+						<button
+							class="status-badge locked clickable"
+							onclick={() => onUnlock?.(user)}
+							disabled={!onUnlock}
+							title={onUnlock ? 'Click to unlock account' : 'Cannot unlock'}
+						>
+							<FontAwesomeIcon icon={faLock} />
+							<span>
+								{#if isPermanent}
+									Permanently Locked
+								{:else if isTemporary && user.lockedUntil}
+									{@const minutesRemaining = Math.ceil(
+										(new Date(user.lockedUntil).getTime() - Date.now()) / 60000
+									)}
+									Locked ({minutesRemaining}m)
+								{:else}
+									Locked (expiring)
+								{/if}
+							</span>
+						</button>
+					{:else}
+						<div class="status-badge active">
+							<FontAwesomeIcon icon={faUnlock} />
+							<span>Active</span>
 						</div>
-						<div class="user-info">
-							<div class="user-name">{user.firstName} {user.lastName}</div>
-							<div class="user-username">@{user.username}</div>
-							<div class="user-email">{user.email}</div>
+					{/if}
+					{#if user.requirePasswordChange}
+						<div class="status-badge warning" title="Must change password on next login">
+							<FontAwesomeIcon icon={faKey} />
+							<span>Pwd Change Required</span>
 						</div>
-					</td>
-
-					<td class="status-cell">
-						{#if user.isDisabled}
-							<button
-								class="status-badge disabled clickable"
-								onclick={() => onEnable?.(user)}
-								disabled={!onEnable}
-								title={onEnable
-									? `Disabled: ${user.disableReason || 'No reason given'}. Click to enable.`
-									: 'Cannot enable'}
-							>
-								<FontAwesomeIcon icon={faLock} />
-								<span>Disabled</span>
-							</button>
-						{:else if user.isLocked}
-							{@const isTemporary = user.lockedUntil && new Date(user.lockedUntil) > new Date()}
-							{@const isPermanent = user.isLocked && !user.lockedUntil}
-							<button
-								class="status-badge locked clickable"
-								onclick={() => onUnlock?.(user)}
-								disabled={!onUnlock}
-								title={onUnlock ? 'Click to unlock account' : 'Cannot unlock'}
-							>
-								<FontAwesomeIcon icon={faLock} />
-								<span>
-									{#if isPermanent}
-										Permanently Locked
-									{:else if isTemporary && user.lockedUntil}
-										{@const minutesRemaining = Math.ceil(
-											(new Date(user.lockedUntil).getTime() - Date.now()) / 60000
-										)}
-										Locked ({minutesRemaining}m)
-									{:else}
-										Locked (expiring)
+					{/if}
+					{#if user.failedLoginAttempts && parseInt(user.failedLoginAttempts) > 0}
+						<div class="status-badge warning-light" title="Failed login attempts">
+							<FontAwesomeIcon icon={faExclamationTriangle} />
+							<span>{user.failedLoginAttempts} failed</span>
+						</div>
+					{/if}
+				</div>
+			{:else if column.label === 'Roles'}
+				<div class="roles-container">
+					{#if user.roles.length > 0}
+						<div class="roles-list">
+							{#each user.roles as role (role.id)}
+								<div class="role-badge" style="--role-color: {getRoleColor(role.name)}">
+									<FontAwesomeIcon icon={getRoleIcon(role.name)} />
+									<span>{role.name}</span>
+									{#if canRemoveRole(role, user.roles)}
+										<button
+											class="remove-role-btn"
+											onclick={(e) => {
+												e.stopPropagation();
+												onRemoveRole(user, role);
+											}}
+											title="Remove {role.name} role"
+										>
+											<FontAwesomeIcon icon={faXmarkCircle} />
+										</button>
 									{/if}
-								</span>
-							</button>
-						{:else}
-							<div class="status-badge active">
-								<FontAwesomeIcon icon={faUnlock} />
-								<span>Active</span>
-							</div>
-						{/if}
-						{#if user.requirePasswordChange}
-							<div class="status-badge warning" title="Must change password on next login">
-								<FontAwesomeIcon icon={faKey} />
-								<span>Pwd Change Required</span>
-							</div>
-						{/if}
-						{#if user.failedLoginAttempts && parseInt(user.failedLoginAttempts) > 0}
-							<div class="status-badge warning-light" title="Failed login attempts">
-								<FontAwesomeIcon icon={faExclamationTriangle} />
-								<span>{user.failedLoginAttempts} failed</span>
-							</div>
-						{/if}
-					</td>
-
-					<td class="roles-cell">
-						<div class="roles-container">
-							{#if user.roles.length > 0}
-								<div class="roles-list">
-									{#each user.roles as role (role.id)}
-										<div class="role-badge" style="--role-color: {getRoleColor(role.name)}">
-											<FontAwesomeIcon icon={getRoleIcon(role.name)} />
-											<span>{role.name}</span>
-											{#if canRemoveRole(role, user.roles)}
-												<button
-													class="remove-role-btn"
-													onclick={(e) => {
-														e.stopPropagation();
-														onRemoveRole(user, role);
-													}}
-													title="Remove {role.name} role"
-												>
-													<FontAwesomeIcon icon={faXmarkCircle} />
-												</button>
-											{/if}
-										</div>
-									{/each}
 								</div>
-							{:else}
-								<span class="no-roles">No roles assigned</span>
-							{/if}
+							{/each}
 						</div>
-					</td>
-
-					<td class="actions-cell">
-						<div class="action-buttons">
-							<Button
-								variant="secondary"
-								onClick={() => onAssignRole(user)}
-								disabled={availableRolesForUser(user) === 0}
-								title={availableRolesForUser(user) === 0
-									? 'All roles already assigned'
-									: 'Assign new role'}
-							>
-								<FontAwesomeIcon icon={faUserPlus} />
-								<span class="button-text">Assign</span>
-							</Button>
-							{#if user.isDisabled && onEnable}
-								<Button variant="success" onClick={() => onEnable(user)} title="Enable account">
-									<FontAwesomeIcon icon={faUnlock} />
-									<span class="button-text">Enable</span>
-								</Button>
-							{:else if !user.isDisabled && onDisable}
-								<Button variant="secondary" onClick={() => onDisable(user)} title="Disable account">
-									<FontAwesomeIcon icon={faLock} />
-									<span class="button-text">Disable</span>
-								</Button>
-							{/if}
-							<Button variant="secondary" onClick={() => onEdit(user)} title="Edit user">
-								<FontAwesomeIcon icon={faEdit} />
-								<span class="button-text">Edit</span>
-							</Button>
-							<Button variant="error" onClick={() => onDelete(user)} title="Delete user">
-								<FontAwesomeIcon icon={faTrash} />
-								<span class="button-text-hide-mobile">Delete</span>
-							</Button>
-						</div>
-					</td>
-				</tr>
-			{/each}
-		</tbody>
-	</table>
+					{:else}
+						<span class="no-roles">No roles assigned</span>
+					{/if}
+				</div>
+			{:else if column.label === 'Actions'}
+				<div class="action-buttons">
+					<Button
+						variant="secondary"
+						onClick={() => onAssignRole(user)}
+						disabled={availableRolesForUser(user) === 0}
+						title={availableRolesForUser(user) === 0
+							? 'All roles already assigned'
+							: 'Assign new role'}
+					>
+						<FontAwesomeIcon icon={faUserPlus} />
+						<span class="button-text">Assign</span>
+					</Button>
+					{#if user.isDisabled && onEnable}
+						<Button variant="success" onClick={() => onEnable(user)} title="Enable account">
+							<FontAwesomeIcon icon={faUnlock} />
+							<span class="button-text">Enable</span>
+						</Button>
+					{:else if !user.isDisabled && onDisable}
+						<Button variant="secondary" onClick={() => onDisable(user)} title="Disable account">
+							<FontAwesomeIcon icon={faLock} />
+							<span class="button-text">Disable</span>
+						</Button>
+					{/if}
+					<Button variant="secondary" onClick={() => onEdit(user)} title="Edit user">
+						<FontAwesomeIcon icon={faEdit} />
+						<span class="button-text">Edit</span>
+					</Button>
+					<Button variant="error" onClick={() => onDelete(user)} title="Delete user">
+						<FontAwesomeIcon icon={faTrash} />
+						<span class="button-text-hide-mobile">Delete</span>
+					</Button>
+				</div>
+			{/if}
+		{/snippet}
+	</SortableTable>
 </div>
 
 <style>
@@ -254,7 +272,7 @@
 		overflow: hidden;
 	}
 
-	.actions-column {
+	.table-container :global(td:last-child) {
 		text-align: right;
 	}
 
@@ -301,6 +319,9 @@
 
 	.status-cell {
 		min-width: 180px;
+		display: flex;
+		flex-direction: column;
+		gap: 0.25rem;
 	}
 
 	.status-badge {
@@ -359,7 +380,7 @@
 		color: rgba(var(--orange), 0.9);
 	}
 
-	.roles-cell {
+	.roles-container {
 		min-width: 200px;
 	}
 
@@ -428,20 +449,20 @@
 			background: transparent;
 		}
 
-		table,
-		thead,
-		tbody,
-		th,
-		td,
-		tr {
+		.table-container :global(table),
+		.table-container :global(thead),
+		.table-container :global(tbody),
+		.table-container :global(th),
+		.table-container :global(td),
+		.table-container :global(tr) {
 			display: block;
 		}
 
-		thead {
+		.table-container :global(thead) {
 			display: none;
 		}
 
-		tr {
+		.table-container :global(tr) {
 			background: var(--background-color-2);
 			border: 1px solid rgba(255, 255, 255, 0.1);
 			border-radius: 0.75rem;
@@ -449,11 +470,11 @@
 			padding: 1rem;
 		}
 
-		tr:hover {
+		.table-container :global(tr:hover) {
 			border-color: rgba(255, 255, 255, 0.2);
 		}
 
-		td {
+		.table-container :global(td) {
 			padding: 0.5rem 0;
 			border: none;
 		}
@@ -465,7 +486,7 @@
 		}
 
 		.status-cell,
-		.roles-cell {
+		.roles-container {
 			min-width: 0;
 			margin-bottom: 0.75rem;
 		}
