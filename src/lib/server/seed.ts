@@ -11,14 +11,21 @@ const SYSTEM_ROLES = {
 		id: 'super-admin',
 		name: 'Super Admin',
 		description: 'Grants the user full access to all system features and settings',
-		permissions: ['admin', 'manage_users', 'manage_roles', 'view_logs'],
+		permissions: [
+			'admin',
+			'manage_users',
+			'manage_roles',
+			'view_logs',
+			'view_config',
+			'edit_config'
+		],
 		isSystemRole: true
 	},
 	ADMIN: {
 		id: 'admin',
 		name: 'Administrator',
 		description: 'Grants the user administrative access to manage users and roles',
-		permissions: ['manage_users', 'manage_roles', 'view_logs'],
+		permissions: ['manage_users', 'manage_roles', 'view_logs', 'view_config'],
 		isSystemRole: true
 	},
 	USER: {

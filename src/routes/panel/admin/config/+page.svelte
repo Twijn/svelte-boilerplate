@@ -57,25 +57,25 @@
 
 	const columns = [
 		{
-			key: 'key' as const,
+			key: 'key' as keyof (typeof flatConfigs)[number],
 			label: 'Setting',
 			sortValue: (item: (typeof flatConfigs)[number]) => item.key
 		},
 		{
-			key: 'value' as const,
+			key: 'value' as keyof (typeof flatConfigs)[number],
 			label: 'Current Value',
 			sortValue: (item: (typeof flatConfigs)[number]) => String(item.value)
 		},
 		{
-			key: 'defaultValue' as const,
+			key: 'defaultValue' as keyof (typeof flatConfigs)[number],
 			label: 'Default',
 			sortValue: (item: (typeof flatConfigs)[number]) => String(item.defaultValue)
 		}
 	];
 
 	// Add actions column conditionally
-	const displayColumns = data.canEdit
-		? [...columns, { key: 'key' as const, label: 'Actions', sortable: false, class: 'actions-col' }]
+	const displayColumns: any = data.canEdit
+		? [...columns, { key: 'isEditable', label: 'Actions', sortable: false }]
 		: columns;
 
 	function startEdit(key: string, value: unknown) {
@@ -119,7 +119,7 @@
 	{#if filteredConfigs.length > 0}
 		<SortableTable data={filteredConfigs} columns={displayColumns} rowKey={(config) => config.key}>
 			{#snippet cellContent({ item: config, column })}
-				{#if column.key === 'key' && column.label === 'Setting'}
+				{#if column.key === 'key'}
 					<div class="setting-info">
 						<code class="config-key">{config.key}</code>
 						{#if !config.isDefault}
@@ -159,7 +159,7 @@
 					{/if}
 				{:else if column.key === 'defaultValue'}
 					<code class="default-value">{formatValue(config.defaultValue, config.type)}</code>
-				{:else if column.label === 'Actions' && data.canEdit}
+				{:else if column.key === 'isEditable' && column.label === 'Actions'}
 					{#if config.isEditable && editingKey !== config.key}
 						<div class="action-buttons">
 							<Button onClick={() => startEdit(config.key, config.value)}>Edit</Button>

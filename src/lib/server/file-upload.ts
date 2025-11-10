@@ -1,6 +1,5 @@
-import { writeFile, mkdir } from 'fs/promises';
-import { join } from 'path';
 import { randomBytes } from 'crypto';
+import { avatarUploadManager } from './storage';
 
 export interface UploadResult {
 	success: boolean;
@@ -36,67 +35,47 @@ export function generateUniqueFilename(originalFilename: string): string {
 }
 
 /**
- * Save uploaded file to disk
+ * Save uploaded file using storage manager
  */
 export async function saveUploadedFile(
 	file: File,
-	directory: string = 'uploads/avatars'
+	directory: string = 'avatars'
 ): Promise<UploadResult> {
 	try {
-		// Validate file type
-		if (!isValidImageType(file)) {
-			return {
-				success: false,
-				error: 'Invalid file type. Only JPEG, PNG, GIF, and WebP images are allowed.'
-			};
-		}
-
-		// Validate file size (5MB)
-		if (!isValidFileSize(file, 5 * 1024 * 1024)) {
-			return {
-				success: false,
-				error: 'File size too large. Maximum size is 5MB.'
-			};
-		}
-
-		// Create directory if it doesn't exist
-		const uploadDir = join(process.cwd(), 'static', directory);
-		await mkdir(uploadDir, { recursive: true });
-
 		// Generate unique filename
 		const filename = generateUniqueFilename(file.name);
-		const filepath = join(uploadDir, filename);
+		const path = `${directory}/${filename}`;
 
-		// Convert File to Buffer and save
+		// Convert File to Buffer
 		const arrayBuffer = await file.arrayBuffer();
 		const buffer = Buffer.from(arrayBuffer);
-		await writeFile(filepath, buffer);
 
-		// Return the public URL path
-		const url = `/${directory}/${filename}`;
+		// Upload using storage manager (handles validation automatically)
+		const result = await avatarUploadManager.upload(buffer, path, {
+			contentType: file.type
+		});
 
 		return {
 			success: true,
 			filename,
-			path: filepath,
-			url
+			path: result.path,
+			url: result.url
 		};
 	} catch (error) {
 		console.error('File upload error:', error);
 		return {
 			success: false,
-			error: 'Failed to upload file. Please try again.'
+			error: error instanceof Error ? error.message : 'Failed to upload file. Please try again.'
 		};
 	}
 }
 
 /**
- * Delete uploaded file from disk
+ * Delete uploaded file using storage manager
  */
 export async function deleteUploadedFile(filePath: string): Promise<boolean> {
 	try {
-		const fs = await import('fs/promises');
-		await fs.unlink(join(process.cwd(), 'static', filePath));
+		await avatarUploadManager.delete(filePath);
 		return true;
 	} catch (error) {
 		console.error('File deletion error:', error);

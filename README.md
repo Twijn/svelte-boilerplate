@@ -32,7 +32,7 @@ A production-ready SvelteKit boilerplate with comprehensive authentication, auth
 - **Profile Management** - Users can edit their profile, upload avatars, change passwords
 - **Account Deletion** - Self-service account deletion with confirmation
 - **User Administration** - Admin interface for managing users and viewing activity
-- **Avatar Upload** - Profile picture support with file storage
+- **File Storage** - Flexible storage supporting local filesystem, AWS S3, and Cloudflare R2
 
 ### 📊 Monitoring & Analytics
 
@@ -102,7 +102,8 @@ A production-ready SvelteKit boilerplate with comprehensive authentication, auth
 Comprehensive documentation is available in the [`docs/`](./docs/) folder:
 
 - **[📖 Documentation Index](./docs/README.md)** - Complete guide to all features
-- **[� Deployment Guide](./docs/DEPLOYMENT.md)** - Deploy to Vercel, Netlify, Railway, Fly.io, VPS, and more
+- **[🚀 Deployment Guide](./docs/DEPLOYMENT.md)** - Deploy to Vercel, Netlify, Railway, Fly.io, VPS, and more
+- **[� Storage System](./docs/STORAGE.md)** - Flexible file storage (local, S3, R2)
 - **[�🔐 Password Reset Setup](./docs/PASSWORD_RESET_SETUP.md)** - Configure email functionality
 - **[✉️ Email Verification](./docs/EMAIL_VERIFICATION.md)** - Enable email verification
 - **[🛡️ Rate Limiting](./docs/RATE_LIMITING.md)** - Configure rate limits and account lockout

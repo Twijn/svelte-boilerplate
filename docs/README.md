@@ -4,11 +4,12 @@ Welcome to the comprehensive documentation for this SvelteKit authentication and
 
 ## 📚 Table of Contents
 
-### � Deployment & Setup
+### 🚀 Deployment & Setup
 
 - **[Deployment Guide](./DEPLOYMENT.md)** - Step-by-step deployment instructions for Vercel, Netlify, Railway, Fly.io, Docker, and VPS
+- **[Storage System](./STORAGE.md)** - Flexible file storage supporting local filesystem, AWS S3, and Cloudflare R2
 
-### �🔐 Authentication & Security
+### � Authentication & Security
 
 - **[Password Reset Setup](./PASSWORD_RESET_SETUP.md)** - Configure email-based password reset functionality with Gmail SMTP
 - **[Email Verification](./EMAIL_VERIFICATION.md)** - Enable email verification for new user registrations
