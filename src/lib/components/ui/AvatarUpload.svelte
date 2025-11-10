@@ -1,11 +1,13 @@
 <script lang="ts">
 	import { FontAwesomeIcon } from '@fortawesome/svelte-fontawesome';
 	import { faCamera, faUser, faTrash } from '@fortawesome/free-solid-svg-icons';
+	import ImageCropper from './ImageCropper.svelte';
 
 	interface Props {
 		currentAvatar?: string | null;
 		size?: 'small' | 'medium' | 'large';
 		editable?: boolean;
+		enableCrop?: boolean;
 		onFileSelect?: (file: File) => void;
 		onDelete?: () => void;
 	}
@@ -14,12 +16,15 @@
 		currentAvatar = null,
 		size = 'medium',
 		editable = false,
+		enableCrop = false,
 		onFileSelect,
 		onDelete
 	}: Props = $props();
 
 	let fileInput = $state<HTMLInputElement>();
 	let previewUrl = $state<string | null>(currentAvatar || null);
+	let selectedFile = $state<File | null>(null);
+	let showCropper = $state(false);
 
 	function handleFileChange(event: Event) {
 		const target = event.target as HTMLInputElement;
@@ -38,17 +43,53 @@
 				return;
 			}
 
-			// Create preview
-			const reader = new FileReader();
-			reader.onload = (e) => {
-				previewUrl = e.target?.result as string;
-			};
-			reader.readAsDataURL(file);
+			// If cropping is enabled, show cropper
+			if (enableCrop) {
+				selectedFile = file;
+				showCropper = true;
+			} else {
+				// Create preview immediately
+				const reader = new FileReader();
+				reader.onload = (e) => {
+					previewUrl = e.target?.result as string;
+				};
+				reader.readAsDataURL(file);
 
-			// Call callback
-			if (onFileSelect) {
-				onFileSelect(file);
+				// Call callback
+				if (onFileSelect) {
+					onFileSelect(file);
+				}
 			}
+		}
+	}
+
+	function handleCropComplete(croppedBlob: Blob, croppedDataUrl: string) {
+		console.log('Crop complete, blob size:', croppedBlob.size);
+		// Update preview with cropped image
+		previewUrl = croppedDataUrl;
+
+		// Convert blob to File and call callback
+		const croppedFile = new File([croppedBlob], 'avatar.jpg', { type: 'image/jpeg' });
+		console.log('Created cropped file:', croppedFile.name, croppedFile.size, croppedFile.type);
+		if (onFileSelect) {
+			onFileSelect(croppedFile);
+		}
+
+		// Close cropper
+		showCropper = false;
+		selectedFile = null;
+
+		// Reset file input
+		if (fileInput) {
+			fileInput.value = '';
+		}
+	}
+
+	function handleCropCancel() {
+		showCropper = false;
+		selectedFile = null;
+		if (fileInput) {
+			fileInput.value = '';
 		}
 	}
 
@@ -111,6 +152,16 @@
 		/>
 	{/if}
 </div>
+
+{#if enableCrop}
+	<ImageCropper
+		imageFile={selectedFile}
+		open={showCropper}
+		aspectRatio={1}
+		onCropComplete={handleCropComplete}
+		onCancel={handleCropCancel}
+	/>
+{/if}
 
 <style>
 	.avatar-upload {

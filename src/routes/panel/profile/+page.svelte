@@ -45,6 +45,7 @@
 	);
 
 	function handleFileSelect(file: File) {
+		console.log('File selected:', file.name, file.size, file.type);
 		selectedFile = file;
 		deleteAvatar = false;
 	}
@@ -82,7 +83,13 @@
 		method="POST"
 		action="?/updateProfile"
 		enctype="multipart/form-data"
-		use:enhance={() => {
+		use:enhance={({ formData }) => {
+			// Add the selected file to formData if it exists
+			if (selectedFile) {
+				console.log('Adding file to formData:', selectedFile.name, selectedFile.size);
+				formData.set('avatar', selectedFile);
+			}
+
 			return async ({ update }) => {
 				await update({ reset: false });
 			};
@@ -93,6 +100,7 @@
 				currentAvatar={data.user.avatar}
 				size="medium"
 				editable={true}
+				enableCrop={true}
 				onFileSelect={handleFileSelect}
 				onDelete={handleAvatarDelete}
 			/>
@@ -141,7 +149,6 @@
 					bind:value={profileForm.username}
 					required
 					placeholder="johndoe"
-					pattern="[a-z0-9_-]&#123;3,31&#125;"
 					title="3-31 characters, lowercase letters, numbers, hyphens, or underscores"
 				/>
 				<small>3-31 characters, lowercase letters, numbers, hyphens, or underscores</small>

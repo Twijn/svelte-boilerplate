@@ -23,6 +23,12 @@ export const actions: Actions = {
 		const avatarFile = getFileFromFormData(formData, 'avatar');
 		const deleteAvatarFlag = formData.get('deleteAvatar') === 'true';
 
+		console.log(
+			'Avatar file from formData:',
+			avatarFile ? `${avatarFile.name} (${avatarFile.size} bytes)` : 'null'
+		);
+		console.log('Delete avatar flag:', deleteAvatarFlag);
+
 		// Validate required fields
 		if (!firstName || !lastName || !username) {
 			return fail(400, {
