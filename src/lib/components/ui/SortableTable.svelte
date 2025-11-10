@@ -1,4 +1,4 @@
-<script lang="ts" generics="T extends Record<string, any>">
+<script lang="ts" generics="T extends Record<string, unknown>">
 	import { FontAwesomeIcon } from '@fortawesome/svelte-fontawesome';
 	import { faSort, faSortUp, faSortDown } from '@fortawesome/free-solid-svg-icons';
 	import { fly, scale } from 'svelte/transition';
@@ -9,7 +9,7 @@
 		key: keyof T;
 		label: string;
 		sortable?: boolean;
-		sortValue?: (item: T) => any; // Custom sort value extractor
+		sortValue?: (item: T) => unknown; // Custom sort value extractor
 		class?: string;
 	}
 
@@ -107,7 +107,7 @@
 	<table>
 		<thead>
 			<tr>
-				{#each columns as column}
+				{#each columns as column (column.key)}
 					<th
 						class:sortable={column.sortable !== false}
 						class:sorted={sortColumn === column.key}
@@ -143,7 +143,7 @@
 		<tbody class:sorting={isSorting}>
 			{#each sortedData as item (rowKey(item))}
 				<tr class={rowClass?.(item)} animate:flip={{ duration: 300 }}>
-					{#each columns as column}
+					{#each columns as column (column.key)}
 						<td class={column.class}>
 							{@render cellContent({ item, column })}
 						</td>

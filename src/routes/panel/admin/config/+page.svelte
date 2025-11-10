@@ -55,18 +55,6 @@
 		);
 	});
 
-	// Group filtered configs by category for table rendering
-	const groupedForTable = $derived.by(() => {
-		const grouped: Record<string, typeof filteredConfigs> = {};
-		for (const config of filteredConfigs) {
-			if (!grouped[config.category]) {
-				grouped[config.category] = [];
-			}
-			grouped[config.category].push(config);
-		}
-		return grouped;
-	});
-
 	const columns = [
 		{
 			key: 'key' as const,

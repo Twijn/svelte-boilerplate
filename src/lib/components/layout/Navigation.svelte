@@ -8,8 +8,7 @@
 		faUserCog,
 		faShieldAlt,
 		faKey,
-		faTimeline,
-		faU
+		faTimeline
 	} from '@fortawesome/free-solid-svg-icons';
 	import { PERMISSIONS } from '$lib/constants/permissions';
 
