@@ -21,6 +21,20 @@
 	import { APP_NAME } from '$lib/consts';
 	import { SvelteURLSearchParams } from 'svelte/reactivity';
 	import Pagination from '$lib/components/ui/Pagination.svelte';
+	import SortableTable from '$lib/components/ui/SortableTable.svelte';
+	import type { Column } from '$lib/components/ui/SortableTable.types';
+
+	type ActivityLog = {
+		id: string;
+		createdAt: Date | string;
+		userId: string | null;
+		action: string;
+		category: string;
+		severity: string;
+		success: boolean;
+		message: string | null;
+		ipAddress: string | null;
+	};
 
 	const { data } = $props();
 
@@ -67,6 +81,19 @@
 	function changePage(newPage: number) {
 		const params = new SvelteURLSearchParams(page.url.searchParams);
 		params.set('page', String(newPage));
+		goto(`?${params.toString()}`);
+	}
+
+	function handleSort(column: string | keyof ActivityLog, direction: 'asc' | 'desc' | null) {
+		const params = new SvelteURLSearchParams(page.url.searchParams);
+		if (direction === null) {
+			params.delete('sortBy');
+			params.delete('sortDirection');
+		} else {
+			params.set('sortBy', String(column));
+			params.set('sortDirection', direction);
+		}
+		params.set('page', '1'); // Reset to first page when sorting changes
 		goto(`?${params.toString()}`);
 	}
 
@@ -185,6 +212,51 @@
 		if (num < 10000000) return (num / 1000000).toFixed(1) + 'M';
 		return Math.floor(num / 1000000) + 'M';
 	}
+
+	// Define table columns for SortableTable
+	const columns: Column<ActivityLog>[] = [
+		{
+			key: 'createdAt',
+			label: 'Timestamp',
+			sortable: true,
+			sortValue: (log) => new Date(log.createdAt).getTime()
+		},
+		{
+			key: 'action',
+			label: 'Action',
+			sortable: true
+		},
+		{
+			key: 'category',
+			label: 'Category',
+			sortable: true
+		},
+		{
+			key: 'severity',
+			label: 'Severity',
+			sortable: true
+		},
+		{
+			key: 'userId',
+			label: 'User',
+			sortable: true
+		},
+		{
+			key: 'success',
+			label: 'Status',
+			sortable: true
+		},
+		{
+			key: 'message',
+			label: 'Message',
+			sortable: true
+		},
+		{
+			key: 'ipAddress',
+			label: 'IP Address',
+			sortable: true
+		}
+	];
 </script>
 
 <svelte:head>
@@ -331,75 +403,68 @@
 {/if}
 
 <!-- Activity Table -->
-<div class="col-12 table-container">
-	<table>
-		<thead>
-			<tr>
-				<th>Timestamp</th>
-				<th>Action</th>
-				<th>Category</th>
-				<th>Severity</th>
-				<th>User</th>
-				<th>Status</th>
-				<th>Message</th>
-				<th>IP Address</th>
-			</tr>
-		</thead>
-		<tbody>
-			{#each data.activities as log (log.id)}
-				<tr class="log-row">
-					<td class="timestamp-cell">
-						<FontAwesomeIcon icon={faClock} />
-						{formatTimestamp(log.createdAt)}
-					</td>
-					<td class="action-cell">
-						<code>{log.action}</code>
-					</td>
-					<td>
-						<span class="category-badge" style="border-color: {getCategoryColor(log.category)}">
-							{log.category}
-						</span>
-					</td>
-					<td>
-						<span
-							class="severity-badge"
-							style="background: {getSeverityColor(log.severity)}20; color: {getSeverityColor(
-								log.severity
-							)}; border-color: {getSeverityColor(log.severity)}"
-						>
-							{log.severity}
-						</span>
-					</td>
-					<td class="user-cell">
-						{log.userId || 'N/A'}
-					</td>
-					<td>
-						<span class="status-badge {log.success ? 'success' : 'failure'}">
-							<FontAwesomeIcon icon={getStatusIcon(log.success)} />
-							{log.success ? 'Success' : 'Failed'}
-						</span>
-					</td>
-					<td class="message-cell">
-						{log.message || 'N/A'}
-					</td>
-					<td class="ip-cell">
-						<code>{log.ipAddress || 'N/A'}</code>
-					</td>
-				</tr>
-			{/each}
-		</tbody>
-	</table>
+<SortableTable
+	data={data.activities}
+	{columns}
+	rowKey={(log) => log.id}
+	serverSideSort={true}
+	currentSortColumn={data.sorting.sortBy as keyof ActivityLog}
+	currentSortDirection={data.sorting.sortDirection}
+	onSort={handleSort}
+>
+	{#snippet cellContent({ item: log, column })}
+		{#if column.key === 'createdAt'}
+			<span class="timestamp-cell">
+				<FontAwesomeIcon icon={faClock} />
+				{formatTimestamp(log.createdAt)}
+			</span>
+		{:else if column.key === 'action'}
+			<span class="action-cell">
+				<code>{log.action}</code>
+			</span>
+		{:else if column.key === 'category'}
+			<span class="category-badge" style="border-color: {getCategoryColor(log.category)}">
+				{log.category}
+			</span>
+		{:else if column.key === 'severity'}
+			<span
+				class="severity-badge"
+				style="background: {getSeverityColor(log.severity)}20; color: {getSeverityColor(
+					log.severity
+				)}; border-color: {getSeverityColor(log.severity)}"
+			>
+				{log.severity}
+			</span>
+		{:else if column.key === 'userId'}
+			<span class="user-cell">
+				{log.userId || 'N/A'}
+			</span>
+		{:else if column.key === 'success'}
+			<span class="status-badge {log.success ? 'success' : 'failure'}">
+				<FontAwesomeIcon icon={getStatusIcon(log.success)} />
+				{log.success ? 'Success' : 'Failed'}
+			</span>
+		{:else if column.key === 'message'}
+			<span class="message-cell">
+				{log.message || 'N/A'}
+			</span>
+		{:else if column.key === 'ipAddress'}
+			<span class="ip-cell">
+				<code>{log.ipAddress || 'N/A'}</code>
+			</span>
+		{/if}
+	{/snippet}
+</SortableTable>
 
-	{#if data.activities.length === 0}
-		<div class="empty-state">
-			<FontAwesomeIcon icon={faHistory} size="3x" />
-			<p>No activity logs found</p>
-			{#if hasActiveFilters}
-				<Button onClick={clearFilters}>Clear Filters</Button>
-			{/if}
-		</div>
-	{/if}
-</div>
+{#if data.activities.length === 0}
+	<div class="col-12 empty-state">
+		<FontAwesomeIcon icon={faHistory} size="3x" />
+		<p>No activity logs found</p>
+		{#if hasActiveFilters}
+			<Button onClick={clearFilters}>Clear Filters</Button>
+		{/if}
+	</div>
+{/if}
 
 <!-- Pagination -->
 {#if data.pagination.totalPages > 1}
@@ -482,22 +547,7 @@
 		gap: 1rem;
 	}
 
-	/* Activity Table */
-	.table-container {
-		margin-bottom: 1rem;
-	}
-
-	th {
-		font-size: 0.75rem;
-		text-transform: uppercase;
-		letter-spacing: 0.5px;
-	}
-
-	td {
-		color: var(--text-color-2);
-		font-size: 0.85rem;
-	}
-
+	/* Cell Styling */
 	.timestamp-cell {
 		color: var(--text-color-3);
 		font-size: 0.8rem;

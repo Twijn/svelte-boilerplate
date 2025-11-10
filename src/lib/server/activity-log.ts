@@ -121,6 +121,8 @@ export interface QueryActivityOptions {
 	endDate?: Date;
 	limit?: number;
 	offset?: number;
+	sortBy?: string;
+	sortDirection?: 'asc' | 'desc';
 }
 
 /**
@@ -250,8 +252,21 @@ export class ActivityLogService {
 			query = query.where(and(...conditions)) as typeof query;
 		}
 
-		// Order by most recent first
-		query = query.orderBy(sql`${table.activityLog.createdAt} DESC`) as typeof query;
+		// Handle sorting
+		if (options.sortBy && options.sortDirection) {
+			const column = table.activityLog[options.sortBy as keyof typeof table.activityLog];
+			if (column) {
+				const orderExpr =
+					options.sortDirection === 'asc' ? sql`${column} ASC` : sql`${column} DESC`;
+				query = query.orderBy(orderExpr) as typeof query;
+			} else {
+				// Default: order by most recent first
+				query = query.orderBy(sql`${table.activityLog.createdAt} DESC`) as typeof query;
+			}
+		} else {
+			// Default: order by most recent first
+			query = query.orderBy(sql`${table.activityLog.createdAt} DESC`) as typeof query;
+		}
 
 		// Apply pagination
 		if (options.limit) {

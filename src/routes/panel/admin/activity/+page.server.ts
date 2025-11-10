@@ -8,13 +8,20 @@ import {
 import { requireViewLogs } from '$lib/server/permission-middleware';
 import type { PageServerLoad } from './$types';
 
-export const load: PageServerLoad = async ({ locals, url }) => {
+export const load: PageServerLoad = async ({ locals, url, depends }) => {
 	await requireViewLogs(locals.user?.id || null);
+
+	// Add dependency for invalidation
+	depends('app:activity-logs');
 
 	// Pagination
 	const page = parseInt(url.searchParams.get('page') || '1');
 	const limit = parseInt(url.searchParams.get('limit') || '50');
 	const offset = (page - 1) * limit;
+
+	// Sorting
+	const sortBy = url.searchParams.get('sortBy') || 'createdAt';
+	const sortDirection = (url.searchParams.get('sortDirection') || 'desc') as 'asc' | 'desc';
 
 	// Filters
 	const userId = url.searchParams.get('userId') || undefined;
@@ -39,7 +46,9 @@ export const load: PageServerLoad = async ({ locals, url }) => {
 	const activities = await ActivityLogService.query({
 		...filters,
 		limit,
-		offset
+		offset,
+		sortBy,
+		sortDirection
 	});
 
 	// Get total count for pagination
@@ -61,6 +70,10 @@ export const load: PageServerLoad = async ({ locals, url }) => {
 			limit,
 			total: totalActivities.length,
 			totalPages: Math.ceil(totalActivities.length / limit)
+		},
+		sorting: {
+			sortBy,
+			sortDirection
 		},
 		filters: {
 			userId,

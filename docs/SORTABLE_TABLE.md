@@ -1,11 +1,13 @@
 # SortableTable Component
 
-A generic, reusable table component with built-in sorting functionality and optional bulk actions.
+A generic, reusable table component with built-in sorting functionality, optional bulk actions, and support for both client-side and server-side sorting.
 
 ## Features
 
 - ✅ Click column headers to sort (asc → desc → unsorted)
 - ✅ Visual sort indicators (▲/▼)
+- ✅ **Client-side sorting** for small datasets
+- ✅ **Server-side sorting** for large datasets with pagination
 - ✅ Supports text, numbers, dates, and booleans
 - ✅ Custom sort value extractors
 - ✅ **Bulk selection with checkboxes**
@@ -196,6 +198,134 @@ Array of bulk action buttons. Each action has:
 ### `onSelectionChange?: (selectedItems: T[]) => void`
 
 Callback when selection changes. Receives array of selected items.
+
+### Server-Side Sorting Props
+
+For large datasets with pagination, use server-side sorting:
+
+#### `serverSideSort?: boolean`
+
+Enable server-side sorting (default: false). When true, sorting will trigger the `onSort` callback instead of sorting data locally.
+
+#### `currentSortColumn?: keyof T | null`
+
+The currently sorted column from the server.
+
+#### `currentSortDirection?: 'asc' | 'desc' | null`
+
+The current sort direction from the server.
+
+#### `onSort?: (column: keyof T, direction: 'asc' | 'desc' | null) => void`
+
+Callback when user clicks to sort. Receives the column key and new direction.
+
+## Server-Side Sorting Example
+
+For paginated data with server-side sorting (like activity logs):
+
+```svelte
+<script lang="ts">
+	import { page } from '$app/state';
+	import { goto } from '$app/navigation';
+	import { SvelteURLSearchParams } from 'svelte/reactivity';
+	import SortableTable from '$lib/components/ui/SortableTable.svelte';
+	import Pagination from '$lib/components/ui/Pagination.svelte';
+
+	const { data } = $props();
+
+	const columns = [
+		{ key: 'createdAt', label: 'Timestamp', sortable: true },
+		{ key: 'action', label: 'Action', sortable: true },
+		{ key: 'userId', label: 'User', sortable: true }
+	];
+
+	function handleSort(column: string, direction: 'asc' | 'desc' | null) {
+		const params = new SvelteURLSearchParams(page.url.searchParams);
+		if (direction === null) {
+			params.delete('sortBy');
+			params.delete('sortDirection');
+		} else {
+			params.set('sortBy', String(column));
+			params.set('sortDirection', direction);
+		}
+		params.set('page', '1'); // Reset to first page
+		goto(`?${params.toString()}`);
+	}
+
+	function changePage(newPage: number) {
+		const params = new SvelteURLSearchParams(page.url.searchParams);
+		params.set('page', String(newPage));
+		goto(`?${params.toString()}`);
+	}
+</script>
+
+<SortableTable
+	data={data.logs}
+	{columns}
+	rowKey={(log) => log.id}
+	serverSideSort={true}
+	currentSortColumn={data.sorting.sortBy}
+	currentSortDirection={data.sorting.sortDirection}
+	onSort={handleSort}
+>
+	{#snippet cellContent({ item, column })}
+		{#if column.key === 'createdAt'}
+			{new Date(item.createdAt).toLocaleString()}
+		{:else if column.key === 'action'}
+			{item.action}
+		{:else if column.key === 'userId'}
+			{item.userId}
+		{/if}
+	{/snippet}
+</SortableTable>
+
+<Pagination
+	currentPage={data.pagination.page}
+	totalPages={data.pagination.totalPages}
+	{changePage}
+/>
+```
+
+**Server-side (+page.server.ts):**
+
+```typescript
+export const load: PageServerLoad = async ({ url, depends }) => {
+	depends('app:data');
+
+	const page = parseInt(url.searchParams.get('page') || '1');
+	const limit = 50;
+	const sortBy = url.searchParams.get('sortBy') || 'createdAt';
+	const sortDirection = (url.searchParams.get('sortDirection') || 'desc') as 'asc' | 'desc';
+
+	const logs = await queryLogs({
+		limit,
+		offset: (page - 1) * limit,
+		sortBy,
+		sortDirection
+	});
+
+	const total = await countLogs();
+
+	return {
+		logs,
+		pagination: {
+			page,
+			totalPages: Math.ceil(total / limit)
+		},
+		sorting: {
+			sortBy,
+			sortDirection
+		}
+	};
+};
+```
+
+This approach:
+
+- ✅ Sorts across **all** records, not just the current page
+- ✅ Works with pagination
+- ✅ Efficient for large datasets
+- ✅ Preserves sort state in URL (shareable, bookmarkable)
 
 ## Advanced Example with Custom Sorting
 

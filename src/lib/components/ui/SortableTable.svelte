@@ -17,6 +17,11 @@
 		enableBulkActions?: boolean;
 		bulkActions?: BulkAction<T>[];
 		onSelectionChange?: (selectedItems: T[]) => void;
+		// Server-side sorting
+		serverSideSort?: boolean;
+		currentSortColumn?: keyof T | null;
+		currentSortDirection?: 'asc' | 'desc' | null;
+		onSort?: (column: keyof T, direction: 'asc' | 'desc' | null) => void;
 	}
 
 	let {
@@ -27,7 +32,11 @@
 		cellContent,
 		enableBulkActions = false,
 		bulkActions = [],
-		onSelectionChange
+		onSelectionChange,
+		serverSideSort = false,
+		currentSortColumn = null,
+		currentSortDirection = null,
+		onSort
 	}: Props = $props();
 
 	// Internal selection state
@@ -39,6 +48,14 @@
 	let sortDirection = $state<SortDirection>(null);
 	let isSorting = $state(false);
 
+	// Use server-provided sort state if available
+	$effect(() => {
+		if (serverSideSort) {
+			sortColumn = currentSortColumn;
+			sortDirection = currentSortDirection;
+		}
+	});
+
 	// Selection state
 	let allSelected = $derived(
 		enableBulkActions && data.length > 0 && selectedItems.length === data.length
@@ -47,8 +64,13 @@
 		enableBulkActions && selectedItems.length > 0 && selectedItems.length < data.length
 	);
 
-	// Sort the data reactively
+	// Sort the data reactively (only for client-side sorting)
 	const sortedData = $derived.by(() => {
+		// If server-side sorting, return data as-is
+		if (serverSideSort) {
+			return data;
+		}
+
 		if (!sortColumn || !sortDirection) {
 			return data;
 		}
@@ -96,17 +118,33 @@
 		isSorting = true;
 		setTimeout(() => (isSorting = false), 300);
 
+		let newDirection: SortDirection;
+
 		if (sortColumn === column.key) {
 			// Cycle through: asc -> desc -> null
 			if (sortDirection === 'asc') {
-				sortDirection = 'desc';
+				newDirection = 'desc';
 			} else if (sortDirection === 'desc') {
-				sortDirection = null;
-				sortColumn = null;
+				newDirection = null;
+			} else {
+				newDirection = 'asc';
 			}
 		} else {
-			sortColumn = column.key;
-			sortDirection = 'asc';
+			newDirection = 'asc';
+		}
+
+		if (serverSideSort && onSort) {
+			// Server-side: call the callback
+			onSort(column.key, newDirection);
+		} else {
+			// Client-side: update local state
+			if (newDirection === null) {
+				sortColumn = null;
+				sortDirection = null;
+			} else {
+				sortColumn = column.key;
+				sortDirection = newDirection;
+			}
 		}
 	}
 
