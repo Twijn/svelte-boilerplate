@@ -7,6 +7,7 @@
 		faCogs
 	} from '@fortawesome/free-solid-svg-icons';
 	import Button from '$lib/components/ui/Button.svelte';
+	import { slide } from 'svelte/transition';
 	import type { Snippet } from 'svelte';
 
 	type ErrorType = '403' | '404' | '500' | 'generic' | 'maintenance';
@@ -18,6 +19,7 @@
 		details?: string;
 		showHomeButton?: boolean;
 		showBackButton?: boolean;
+		customSuggestions?: Snippet; // Snippet for suggestions list
 		customActions?: Snippet; // Snippet for custom action buttons
 	}
 
@@ -28,6 +30,7 @@
 		details,
 		showHomeButton = true,
 		showBackButton = false,
+		customSuggestions,
 		customActions
 	}: Props = $props();
 
@@ -73,6 +76,9 @@
 	const config = errorConfigs[type];
 	const displayTitle = title || config.defaultTitle;
 	const displayMessage = message || config.defaultMessage;
+
+	let detailsOpen = $state(false);
+	let suggestionsOpen = $state(false);
 </script>
 
 <div class="error-container" style="background: {config.gradient};">
@@ -94,10 +100,32 @@
 			<p class="error-message">{displayMessage}</p>
 
 			{#if details}
-				<details class="error-details">
-					<summary>Technical Details</summary>
-					<pre>{details}</pre>
-				</details>
+				<div class="error-details">
+					<button class="details-summary" onclick={() => (detailsOpen = !detailsOpen)}>
+						<span class="arrow" class:open={detailsOpen}>▶</span>
+						Technical Details
+					</button>
+					{#if detailsOpen}
+						<div class="details-content" transition:slide={{ duration: 300 }}>
+							<pre>{details}</pre>
+						</div>
+					{/if}
+				</div>
+			{/if}
+			{#if customSuggestions}
+				<div class="error-details">
+					<button class="details-summary" onclick={() => (suggestionsOpen = !suggestionsOpen)}>
+						<span class="arrow" class:open={suggestionsOpen}>▶</span>
+						Suggestions
+					</button>
+					{#if suggestionsOpen}
+						<div class="details-content" transition:slide={{ duration: 300 }}>
+							<div class="suggestions-content">
+								{@render customSuggestions()}
+							</div>
+						</div>
+					{/if}
+				</div>
 			{/if}
 		</div>
 
@@ -194,7 +222,7 @@
 	}
 
 	.error-details {
-		margin: 2rem 0;
+		margin: 1rem 0;
 		text-align: left;
 		background: rgba(0, 0, 0, 0.2);
 		border: 1px solid rgba(255, 255, 255, 0.1);
@@ -202,21 +230,45 @@
 		overflow: hidden;
 	}
 
-	.error-details summary {
+	.details-summary {
+		width: 100%;
 		padding: 1rem;
 		cursor: pointer;
 		background: rgba(255, 255, 255, 0.05);
 		color: var(--text-color-2);
 		font-weight: 500;
-		border-bottom: 1px solid rgba(255, 255, 255, 0.1);
-		transition: background-color 0.2s ease;
+		border: none;
+		transition: all 0.3s ease;
+		display: flex;
+		align-items: center;
+		gap: 0.5rem;
+		user-select: none;
+		font-size: 1rem;
+		text-align: left;
 	}
 
-	.error-details summary:hover {
+	.details-summary:hover {
 		background: rgba(255, 255, 255, 0.1);
 	}
 
-	.error-details pre {
+	.arrow {
+		display: inline-block;
+		transition: transform 0.3s ease;
+		font-size: 0.8rem;
+		color: var(--text-color-3);
+	}
+
+	.arrow.open {
+		transform: rotate(90deg);
+	}
+
+	.details-content {
+		border-top: 1px solid rgba(255, 255, 255, 0.1);
+		overflow: hidden;
+	}
+
+	.error-details pre,
+	.suggestions-content {
 		padding: 1rem;
 		margin: 0;
 		font-family: var(--font-family-mono), monospace;
@@ -225,6 +277,10 @@
 		overflow-x: auto;
 		white-space: pre-wrap;
 		word-break: break-word;
+	}
+
+	.suggestions-content {
+		font-family: inherit;
 	}
 
 	.error-actions {

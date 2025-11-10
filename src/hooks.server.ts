@@ -4,6 +4,7 @@ import * as auth from '$lib/server/auth';
 import { permissionHandle } from '$lib/server/permission-middleware';
 import { dev } from '$app/environment';
 import { initializeConfigSystem } from '$lib/server/config';
+import { ActivityLogService, ActivityCategory } from '$lib/server/activity-log';
 
 // Initialize configuration system on server startup
 initializeConfigSystem();
@@ -84,6 +85,28 @@ export const handleError: HandleServerError = async ({ error, event, status, mes
 		console.error(`📄 Error Details:`, error);
 	}
 	console.error('═══════════════════════════════════════════════════════════════');
+
+	// Log 500 errors to activity log for monitoring
+	if (status >= 500 && event.locals.user) {
+		try {
+			await ActivityLogService.log({
+				userId: event.locals.user.id,
+				action: 'system.error' as const,
+				category: ActivityCategory.SYSTEM,
+				metadata: {
+					errorId,
+					status,
+					message,
+					url: event.url.pathname,
+					userAgent: event.request.headers.get('user-agent')
+				},
+				ipAddress: event.getClientAddress()
+			});
+		} catch (logError) {
+			// Don't fail the error handler if logging fails
+			console.error('Failed to log error to activity log:', logError);
+		}
+	}
 
 	// Return slightly more verbose error to client
 	return {
