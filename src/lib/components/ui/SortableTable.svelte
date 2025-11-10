@@ -1,4 +1,4 @@
-<script lang="ts" generics="T extends Record<string, unknown>">
+<script lang="ts" generics="T">
 	import { FontAwesomeIcon } from '@fortawesome/svelte-fontawesome';
 	import { faSort, faSortUp, faSortDown } from '@fortawesome/free-solid-svg-icons';
 	import { fly } from 'svelte/transition';
