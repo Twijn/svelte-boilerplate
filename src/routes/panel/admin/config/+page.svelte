@@ -1,6 +1,5 @@
 <script lang="ts">
 	import Heading from '$lib/components/layout/Heading.svelte';
-	import Section from '$lib/components/ui/Section.svelte';
 	import Button from '$lib/components/ui/Button.svelte';
 	import SortableTable from '$lib/components/ui/SortableTable.svelte';
 	import { enhance } from '$app/forms';
@@ -121,7 +120,7 @@
 
 <Heading text="System Configuration" description="Manage system settings and configuration" />
 
-<Section>
+<div class="col-12">
 	<input
 		type="text"
 		bind:value={searchQuery}
@@ -192,7 +191,7 @@
 			<p>No configuration variables found matching "{searchQuery}"</p>
 		</div>
 	{/if}
-</Section>
+</div>
 
 <style>
 	.search-input {
